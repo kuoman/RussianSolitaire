@@ -1,6 +1,7 @@
 # src/solitaire/game_file.py
 from pathlib import Path
 from solitaire.card import Card
+from solitaire.tableau import COLUMN_SIZES
 
 
 class GameFile:
@@ -9,8 +10,8 @@ class GameFile:
         path.parent.mkdir(parents=True, exist_ok=True)
         lines = [f"# Game {game_id}", ""]
         max_rows = max(len(col) for col in tableau.columns)
-        header = "| " + " | ".join(f"C{i+1}" for i in range(7)) + " |"
-        separator = "| " + " | ".join("---" for _ in range(7)) + " |"
+        header = "| " + " | ".join(f"C{i+1}" for i in range(len(COLUMN_SIZES))) + " |"
+        separator = "| " + " | ".join("---" for _ in range(len(COLUMN_SIZES))) + " |"
         lines.append(header)
         lines.append(separator)
         for row in range(max_rows):
@@ -30,10 +31,14 @@ class GameFile:
         from solitaire.tableau import _RawTableau
         lines = path.read_text().splitlines()
         data_rows = [l for l in lines if l.startswith("|") and "C1" not in l and "---" not in l]
-        columns = [[] for _ in range(7)]
+        columns = [[] for _ in range(len(COLUMN_SIZES))]
         for row in data_rows:
             cells = [c.strip() for c in row.strip().strip("|").split("|")]
-            for col_idx, cell in enumerate(cells[:7]):
+            if len(cells) != len(COLUMN_SIZES):
+                raise ValueError(
+                    f"Expected {len(COLUMN_SIZES)} columns, got {len(cells)} in: {row!r}"
+                )
+            for col_idx, cell in enumerate(cells[:len(COLUMN_SIZES)]):
                 if cell:
                     face_up = not cell.startswith("*")
                     raw = cell.lstrip("*")

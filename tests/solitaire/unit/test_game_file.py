@@ -24,16 +24,19 @@ def test_saved_file_contains_column_headers():
         tableau = make_minimal_tableau()
         GameFile.save(tableau, path, game_id="2026-05-11-000001")
         content = path.read_text()
-        assert "| C1 |" in content
-        assert "| C7 |" in content
+        assert "| C1 | C2 | C3 | C4 | C5 | C6 | C7 |" in content
 
 def test_face_down_cards_saved_with_star_prefix():
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "test_game.md"
         tableau = make_minimal_tableau()
         GameFile.save(tableau, path, game_id="2026-05-11-000001")
-        content = path.read_text()
-        assert "*" in content
+        lines = path.read_text().splitlines()
+        data_rows = [l for l in lines if l.startswith("|") and "C1" not in l and "---" not in l]
+        # C2 has 1 face-down card (first card in column 2)
+        first_data_row = data_rows[0]
+        c2_cell = first_data_row.split("|")[2].strip()
+        assert c2_cell.startswith("*")
 
 def test_face_up_card_in_c1_saved_without_star():
     with tempfile.TemporaryDirectory() as tmp:
@@ -45,6 +48,18 @@ def test_face_up_card_in_c1_saved_without_star():
         c1_cell = first_data_row.split("|")[1].strip()
         assert not c1_cell.startswith("*")
         assert len(c1_cell) > 0
+
+def test_empty_cells_written_for_shorter_columns():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile.save(tableau, path, game_id="2026-05-11-000001")
+        lines = path.read_text().splitlines()
+        data_rows = [l for l in lines if l.startswith("|") and "C1" not in l and "---" not in l]
+        # C1 has only 1 card; second data row should have an empty C1 cell
+        second_data_row = data_rows[1]
+        c1_cell = second_data_row.split("|")[1].strip()
+        assert c1_cell == ""
 
 def test_load_returns_seven_columns():
     with tempfile.TemporaryDirectory() as tmp:

@@ -62,3 +62,10 @@ Python implementation of Russian Solitaire card game.
 - **Arlo Belshee's commit notation**: Use Arlo's notation style for commit messages
 - **Committer skill**: Always use the committer skill when creating commits (invoked via `c` or `/commit`)
 - Commits should be small enough to easily understand and revert if needed
+
+## Branching Strategy
+
+- **Trunk-based development**: `main` is the integration branch — all work lands here
+- **Short-lived branches only**: Subagents may create feature branches for isolation during TDD/test-first work, but these must be merged back to `main` before the task is considered done
+- **No long-lived branches**: A task is not complete until its code is on `main`
+- Single developer — no PRs required, direct merge to main is the norm

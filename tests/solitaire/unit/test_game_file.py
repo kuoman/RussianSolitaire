@@ -69,6 +69,23 @@ def test_saved_file_contains_version():
         content = path.read_text()
         assert "version: 0.0.1" in content
 
+def test_saved_file_contains_c1_special_metadata():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile.save(tableau, path, game_id="2026-05-11-000001")
+        content = path.read_text()
+        assert "c1_special:" in content
+
+def test_saved_file_contains_playability_metadata_for_all_columns():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile.save(tableau, path, game_id="2026-05-11-000001")
+        content = path.read_text()
+        for col_num in range(2, 8):
+            assert f"c{col_num}_playable:" in content
+
 def test_load_returns_seven_columns():
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "test_game.md"

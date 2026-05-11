@@ -83,7 +83,7 @@ def test_column_is_not_playable_when_higher_same_suit_missing():
         make_column(face_up("♠", "5")),
         make_column(face_down("♦", "3"), face_up("♥", "7"), face_up("♠", "9"), face_up("♦", "J"), face_up("♣", "Q"), face_up("♠", "K")),
         make_column(face_down("♦", "2"), face_down("♣", "4"), face_up("♠", "8"), face_up("♠", "10"), face_up("♦", "Q"), face_up("♣", "K"), face_up("♥", "2")),
-        make_column(face_down("♥", "2"), face_down("♠", "4"), face_down("♦", "6"), face_up("♣", "7"), face_up("♥", "8"), face_up("♠", "9"), face_up("♦", "10"), face_up("♣", "J")),
+        make_column(face_down("♥", "2"), face_down("♠", "4"), face_down("♦", "6"), face_up("♣", "7"), face_up("♥", "9"), face_up("♠", "9"), face_up("♦", "10"), face_up("♣", "J")),
         make_column(face_down("♣", "2"), face_down("♥", "4"), face_down("♠", "6"), face_down("♦", "8"), face_up("♣", "9"), face_up("♥", "10"), face_up("♠", "J"), face_up("♦", "Q"), face_up("♣", "K")),
         make_column(face_down("♥", "3"), face_down("♦", "5"), face_down("♣", "7"), face_down("♠", "9"), face_down("♥", "J"), face_up("♦", "Q"), face_up("♣", "K"), face_up("♥", "2"), face_up("♠", "3"), face_up("♦", "4")),
         make_column(face_down("♣", "3"), face_down("♥", "5"), face_down("♠", "7"), face_down("♦", "9"), face_down("♣", "J"), face_down("♥", "Q"), face_up("♠", "K"), face_up("♦", "2"), face_up("♣", "3"), face_up("♥", "4"), face_up("♠", "5")),

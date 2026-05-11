@@ -1,0 +1,10 @@
+import tempfile
+from pathlib import Path
+from datetime import date
+from solitaire.game_registry import GameRegistry
+
+
+def test_next_game_number_is_000001_when_no_games_today():
+    with tempfile.TemporaryDirectory() as data_dir:
+        result = GameRegistry.next_game_number(date(2026, 5, 11), Path(data_dir))
+        assert result == "000001"

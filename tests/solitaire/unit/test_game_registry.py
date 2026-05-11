@@ -41,3 +41,11 @@ def test_next_game_path_returns_correct_path():
         data_path = Path(data_dir)
         result = GameRegistry.next_game_path(date(2026, 5, 11), data_path)
         assert result == data_path / "2026-05-11-000001.md"
+
+
+def test_next_game_path_increments_when_game_exists():
+    with tempfile.TemporaryDirectory() as data_dir:
+        data_path = Path(data_dir)
+        (data_path / "2026-05-11-000001.md").touch()
+        result = GameRegistry.next_game_path(date(2026, 5, 11), data_path)
+        assert result == data_path / "2026-05-11-000002.md"

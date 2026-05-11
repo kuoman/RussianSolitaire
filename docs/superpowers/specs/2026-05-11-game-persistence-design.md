@@ -30,7 +30,7 @@ src/solitaire/
 ├── game_registry.py  # NEW — determine next game number for today
 └── game_file.py      # NEW — save/load Tableau to/from .md file
 
-data/                 # NEW directory — game save files (gitignored)
+data/                 # NEW directory — game save files (committed to git)
     2026-05-11-000001.md
     2026-05-11-000002.md
 
@@ -150,8 +150,9 @@ def test_save_then_load_preserves_column_structure(): ...
 
 ## Implementation Notes
 
-- Add `data/` to `.gitignore` — game files are runtime data, not source
+- `data/` is committed to git — game files are persistent records of every game played
 - `data/` directory should be created by `GameFile.save()` if it doesn't exist
+- Add a `.gitkeep` file to `data/` so the empty directory is tracked by git
 
 ---
 

@@ -19,4 +19,6 @@ class Card:
     def render(self, debug: bool = False) -> str:
         if self._face_up:
             return f"{self._rank}{self._suit}"
+        if debug:
+            return f"*{self._rank}{self._suit}"
         return "░░"

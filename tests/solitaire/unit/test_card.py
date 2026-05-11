@@ -28,3 +28,7 @@ def test_face_up_ten_renders_as_three_chars():
 def test_face_down_card_renders_as_block():
     card = Card("♣", "Q", face_up=False)
     expect_card(card).and_render_as("░░")
+
+def test_face_down_card_renders_with_star_prefix_in_debug_mode():
+    card = Card("♣", "Q", face_up=False)
+    expect_card(card).and_render_as("*Q♣", debug=True)

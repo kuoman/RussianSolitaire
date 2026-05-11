@@ -8,8 +8,11 @@ from solitaire import __version__
 class GameFile:
     @staticmethod
     def save(tableau, path: Path, game_id: str) -> None:
+        from solitaire.game_analyzer import GameAnalyzer
         path.parent.mkdir(parents=True, exist_ok=True)
-        lines = [f"# Game {game_id}", "", f"version: {__version__}", ""]
+        metadata = GameAnalyzer.analyse(tableau)
+        meta_lines = [f"{k}: {v}" for k, v in metadata.items()]
+        lines = [f"# Game {game_id}", "", f"version: {__version__}"] + meta_lines + [""]
         max_rows = max(len(col) for col in tableau.columns)
         header = "| " + " | ".join(f"C{i+1}" for i in range(len(COLUMN_SIZES))) + " |"
         separator = "| " + " | ".join("---" for _ in range(len(COLUMN_SIZES))) + " |"

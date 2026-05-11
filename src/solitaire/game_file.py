@@ -38,7 +38,7 @@ class GameFile:
                 raise ValueError(
                     f"Expected {len(COLUMN_SIZES)} columns, got {len(cells)} in: {row!r}"
                 )
-            for col_idx, cell in enumerate(cells[:len(COLUMN_SIZES)]):
+            for col_idx, cell in enumerate(cells):
                 if cell:
                     face_up = not cell.startswith("*")
                     raw = cell.lstrip("*")

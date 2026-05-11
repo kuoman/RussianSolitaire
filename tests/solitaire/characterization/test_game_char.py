@@ -17,8 +17,9 @@ def make_tableau():
 def round_trip(tableau):
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "test_game.md"
-        GameFile.save(tableau, path, game_id="2026-05-11-000001")
-        return GameFile.load(path)
+        gf = GameFile(path, game_id="2026-05-11-000001")
+        gf.save(tableau)
+        return gf.load()
 
 
 def test_save_then_load_preserves_all_52_cards():

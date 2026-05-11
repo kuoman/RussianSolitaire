@@ -24,7 +24,7 @@ def main():
 
     if args.load:
         try:
-            tableau = GameFile.load(Path(args.load))
+            tableau = GameFile(Path(args.load), game_id=Path(args.load).stem).load()
         except FileNotFoundError:
             print(f"Error: save file not found: {args.load}", file=sys.stderr)
             sys.exit(1)
@@ -38,7 +38,7 @@ def main():
         if not args.no_save:
             game_path = GameRegistry.next_game_path(date.today(), DATA_DIR)
             game_id = game_path.stem
-            GameFile.save(tableau, game_path, game_id=game_id)
+            GameFile(game_path, game_id=game_id).save(tableau)
             print(f"Game saved to {game_path}")
 
     print(Display(tableau, debug=args.debug).render())

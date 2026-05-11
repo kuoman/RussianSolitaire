@@ -1,15 +1,18 @@
 # src/solitaire/game_file.py
 from pathlib import Path
-from solitaire.card import Card
 from solitaire.tableau import COLUMN_SIZES
+from solitaire.card import Card
 from solitaire import __version__
 
 
 class GameFile:
-    @staticmethod
-    def save(tableau, path: Path, game_id: str, *, won="unknown", foundation_cards=0, moves=0) -> None:
+    def __init__(self, path: Path, game_id: str):
+        self._path = path
+        self._game_id = game_id
+
+    def save(self, tableau, *, won="unknown", foundation_cards=0, moves=0) -> None:
         from solitaire.game_analyzer import GameAnalyzer
-        path.parent.mkdir(parents=True, exist_ok=True)
+        self._path.parent.mkdir(parents=True, exist_ok=True)
         metadata = GameAnalyzer.analyse(tableau)
         meta_lines = [f"{k}: {v}" for k, v in metadata.items()]
         outcome_lines = [
@@ -17,7 +20,7 @@ class GameFile:
             f"foundation_cards: {foundation_cards}",
             f"moves: {moves}",
         ]
-        lines = [f"# Game {game_id}", "", f"version: {__version__}"] + meta_lines + outcome_lines + [""]
+        lines = [f"# Game {self._game_id}", "", f"version: {__version__}"] + meta_lines + outcome_lines + [""]
         max_rows = max(len(col) for col in tableau.columns)
         header = "| " + " | ".join(f"C{i+1}" for i in range(len(COLUMN_SIZES))) + " |"
         separator = "| " + " | ".join("---" for _ in range(len(COLUMN_SIZES))) + " |"
@@ -33,12 +36,11 @@ class GameFile:
                 else:
                     cells.append("")
             lines.append("| " + " | ".join(cells) + " |")
-        path.write_text("\n".join(lines) + "\n")
+        self._path.write_text("\n".join(lines) + "\n")
 
-    @staticmethod
-    def load(path: Path):
+    def load(self):
         from solitaire.tableau import _RawTableau
-        lines = path.read_text().splitlines()
+        lines = self._path.read_text().splitlines()
         data_rows = [l for l in lines if l.startswith("|") and "C1" not in l and "---" not in l]
         columns = [[] for _ in range(len(COLUMN_SIZES))]
         for row in data_rows:

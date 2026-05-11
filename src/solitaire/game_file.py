@@ -7,12 +7,17 @@ from solitaire import __version__
 
 class GameFile:
     @staticmethod
-    def save(tableau, path: Path, game_id: str) -> None:
+    def save(tableau, path: Path, game_id: str, *, won="unknown", foundation_cards=0, moves=0) -> None:
         from solitaire.game_analyzer import GameAnalyzer
         path.parent.mkdir(parents=True, exist_ok=True)
         metadata = GameAnalyzer.analyse(tableau)
         meta_lines = [f"{k}: {v}" for k, v in metadata.items()]
-        lines = [f"# Game {game_id}", "", f"version: {__version__}"] + meta_lines + [""]
+        outcome_lines = [
+            f"won: {won}",
+            f"foundation_cards: {foundation_cards}",
+            f"moves: {moves}",
+        ]
+        lines = [f"# Game {game_id}", "", f"version: {__version__}"] + meta_lines + outcome_lines + [""]
         max_rows = max(len(col) for col in tableau.columns)
         header = "| " + " | ".join(f"C{i+1}" for i in range(len(COLUMN_SIZES))) + " |"
         separator = "| " + " | ".join("---" for _ in range(len(COLUMN_SIZES))) + " |"

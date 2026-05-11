@@ -2,13 +2,14 @@
 from pathlib import Path
 from solitaire.card import Card
 from solitaire.tableau import COLUMN_SIZES
+from solitaire import __version__
 
 
 class GameFile:
     @staticmethod
     def save(tableau, path: Path, game_id: str) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        lines = [f"# Game {game_id}", ""]
+        lines = [f"# Game {game_id}", "", f"version: {__version__}", ""]
         max_rows = max(len(col) for col in tableau.columns)
         header = "| " + " | ".join(f"C{i+1}" for i in range(len(COLUMN_SIZES))) + " |"
         separator = "| " + " | ".join("---" for _ in range(len(COLUMN_SIZES))) + " |"

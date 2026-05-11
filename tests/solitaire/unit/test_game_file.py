@@ -86,6 +86,41 @@ def test_saved_file_contains_playability_metadata_for_all_columns():
         for col_num in range(2, 8):
             assert f"c{col_num}_playable:" in content
 
+def test_saved_file_contains_won_metadata():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile.save(tableau, path, game_id="2026-05-11-000001")
+        content = path.read_text()
+        assert "won: unknown" in content
+
+def test_saved_file_contains_foundation_cards_metadata():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile.save(tableau, path, game_id="2026-05-11-000001")
+        content = path.read_text()
+        assert "foundation_cards: 0" in content
+
+def test_saved_file_contains_moves_metadata():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile.save(tableau, path, game_id="2026-05-11-000001")
+        content = path.read_text()
+        assert "moves: 0" in content
+
+def test_save_accepts_custom_outcome_values():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile.save(tableau, path, game_id="2026-05-11-000001",
+                      won="true", foundation_cards=52, moves=37)
+        content = path.read_text()
+        assert "won: true" in content
+        assert "foundation_cards: 52" in content
+        assert "moves: 37" in content
+
 def test_load_returns_seven_columns():
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "test_game.md"

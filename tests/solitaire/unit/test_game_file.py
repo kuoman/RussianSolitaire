@@ -61,6 +61,14 @@ def test_empty_cells_written_for_shorter_columns():
         c1_cell = second_data_row.split("|")[1].strip()
         assert c1_cell == ""
 
+def test_saved_file_contains_version():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile.save(tableau, path, game_id="2026-05-11-000001")
+        content = path.read_text()
+        assert "version: 0.0.1" in content
+
 def test_load_returns_seven_columns():
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "test_game.md"

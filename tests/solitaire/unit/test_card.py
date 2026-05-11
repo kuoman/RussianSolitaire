@@ -8,3 +8,11 @@ from tests.solitaire.assertions import expect_card
 def test_card_has_suit_and_rank():
     card = Card("♠", "A")
     expect_card(card).to_have_suit("♠").and_rank("A")
+
+def test_card_is_face_down_by_default():
+    card = Card("♥", "K")
+    expect_card(card).and_be_face_down()
+
+def test_card_can_be_face_up():
+    card = Card("♦", "5", face_up=True)
+    expect_card(card).and_be_face_up()

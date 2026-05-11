@@ -16,3 +16,15 @@ def test_card_is_face_down_by_default():
 def test_card_can_be_face_up():
     card = Card("♦", "5", face_up=True)
     expect_card(card).and_be_face_up()
+
+def test_face_up_card_renders_as_rank_and_suit():
+    card = Card("♠", "A", face_up=True)
+    expect_card(card).and_render_as("A♠")
+
+def test_face_up_ten_renders_as_three_chars():
+    card = Card("♥", "10", face_up=True)
+    expect_card(card).and_render_as("10♥")
+
+def test_face_down_card_renders_as_block():
+    card = Card("♣", "Q", face_up=False)
+    expect_card(card).and_render_as("░░")

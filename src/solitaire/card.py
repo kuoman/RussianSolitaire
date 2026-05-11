@@ -15,3 +15,8 @@ class Card:
     @property
     def face_up(self) -> bool:
         return self._face_up
+
+    def render(self, debug: bool = False) -> str:
+        if self._face_up:
+            return f"{self._rank}{self._suit}"
+        return "░░"

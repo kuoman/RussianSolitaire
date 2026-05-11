@@ -45,3 +45,42 @@ def test_face_up_card_in_c1_saved_without_star():
         c1_cell = first_data_row.split("|")[1].strip()
         assert not c1_cell.startswith("*")
         assert len(c1_cell) > 0
+
+def test_load_returns_seven_columns():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        original = make_minimal_tableau()
+        GameFile.save(original, path, game_id="2026-05-11-000001")
+        loaded = GameFile.load(path)
+        assert len(loaded.columns) == 7
+
+def test_load_preserves_column_card_counts():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        original = make_minimal_tableau()
+        GameFile.save(original, path, game_id="2026-05-11-000001")
+        loaded = GameFile.load(path)
+        expected_sizes = [1, 6, 7, 8, 9, 10, 11]
+        for i, size in enumerate(expected_sizes):
+            assert len(loaded.columns[i]) == size
+
+def test_load_preserves_face_up_state():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        original = make_minimal_tableau()
+        GameFile.save(original, path, game_id="2026-05-11-000001")
+        loaded = GameFile.load(path)
+        for col_orig, col_loaded in zip(original.columns, loaded.columns):
+            for card_orig, card_loaded in zip(col_orig, col_loaded):
+                assert card_orig.face_up == card_loaded.face_up
+
+def test_load_preserves_suit_and_rank():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        original = make_minimal_tableau()
+        GameFile.save(original, path, game_id="2026-05-11-000001")
+        loaded = GameFile.load(path)
+        for col_orig, col_loaded in zip(original.columns, loaded.columns):
+            for card_orig, card_loaded in zip(col_orig, col_loaded):
+                assert card_orig.suit == card_loaded.suit
+                assert card_orig.rank == card_loaded.rank

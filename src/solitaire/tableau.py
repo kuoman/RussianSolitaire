@@ -15,3 +15,8 @@ class Tableau:
                 for j, card in enumerate(cards)
             ]
             self.columns.append(column)
+
+
+class _RawTableau:
+    def __init__(self, columns: list):
+        self.columns = columns

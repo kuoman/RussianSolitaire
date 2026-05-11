@@ -1,11 +1,10 @@
 # src/main.py
 import argparse
 import sys
-import os
 from datetime import date
 from pathlib import Path
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+sys.path.insert(0, str(Path(__file__).parent))
 
 from solitaire.deck import Deck
 from solitaire.tableau import Tableau
@@ -24,7 +23,14 @@ def main():
     args = parser.parse_args()
 
     if args.load:
-        tableau = GameFile.load(Path(args.load))
+        try:
+            tableau = GameFile.load(Path(args.load))
+        except FileNotFoundError:
+            print(f"Error: save file not found: {args.load}", file=sys.stderr)
+            sys.exit(1)
+        except ValueError as e:
+            print(f"Error: malformed save file: {e}", file=sys.stderr)
+            sys.exit(1)
     else:
         deck = Deck()
         deck.shuffle()

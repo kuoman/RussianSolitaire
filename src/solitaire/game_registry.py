@@ -6,7 +6,10 @@ class GameRegistry:
     @staticmethod
     def next_game_number(today: date, data_dir: Path) -> str:
         prefix = today.strftime("%Y-%m-%d")
-        existing = sorted(data_dir.glob(f"{prefix}-*.md"))
+        existing = sorted(
+            p for p in data_dir.glob(f"{prefix}-*.md")
+            if p.stem.split("-")[-1].isdigit()
+        )
         if not existing:
             return "000001"
         last = existing[-1].stem  # e.g. "2026-05-11-000003"

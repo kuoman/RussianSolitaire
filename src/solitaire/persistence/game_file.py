@@ -10,22 +10,32 @@ class GameFile:
         self._path = path
         self._game_id = game_id
 
-    def save(self, tableau, *, won="unknown", foundation_cards=0, moves=0) -> None:
+    def save(self, tableau, *, won="unknown", foundation_cards=0, move_log=None) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        header_lines = self._build_header_lines(tableau, won, foundation_cards, moves)
+        log = list(move_log) if move_log else []
+        header_lines = self._build_header_lines(tableau, won, foundation_cards, len(log))
         table_lines = self._build_table_lines(tableau)
-        self._path.write_text("\n".join(header_lines + table_lines) + "\n")
+        moves_lines = self._build_moves_section(log)
+        self._path.write_text("\n".join(header_lines + table_lines + moves_lines) + "\n")
 
-    def _build_header_lines(self, tableau, won, foundation_cards, moves) -> list:
+    def _build_header_lines(self, tableau, won, foundation_cards, moves_count) -> list:
         from solitaire.persistence.game_analyzer import GameAnalyzer
         metadata = GameAnalyzer(tableau).analyse()
         meta_lines = [f"{k}: {v}" for k, v in metadata.items()]
         outcome_lines = [
             f"won: {won}",
             f"foundation_cards: {foundation_cards}",
-            f"moves: {moves}",
+            f"moves: {moves_count}",
         ]
         return [f"# Game {self._game_id}", "", f"version: {__version__}"] + meta_lines + outcome_lines + [""]
+
+    def _build_moves_section(self, move_log: list) -> list:
+        if not move_log:
+            return []
+        lines = ["", "## Moves"]
+        for i, description in enumerate(move_log, start=1):
+            lines.append(f"{i}. {description}")
+        return lines
 
     def _build_table_lines(self, tableau) -> list:
         max_rows = max(len(col) for col in tableau.columns)

@@ -122,11 +122,61 @@ def test_save_accepts_custom_outcome_values():
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "test_game.md"
         tableau = make_minimal_tableau()
-        GameFile(path, game_id="2026-05-11-000001").save(tableau, won="true", foundation_cards=52, moves=37)
+        GameFile(path, game_id="2026-05-11-000001").save(
+            tableau,
+            won="true",
+            foundation_cards=52,
+            move_log=["m"] * 37,
+        )
         content = path.read_text()
         assert "won: true" in content
         assert "foundation_cards: 52" in content
         assert "moves: 37" in content
+
+
+def test_save_writes_no_moves_section_when_log_empty():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile(path, game_id="test").save(tableau, move_log=[])
+        content = path.read_text()
+        assert "## Moves" not in content
+
+
+def test_save_writes_moves_section_when_log_has_entries():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile(path, game_id="test").save(
+            tableau,
+            move_log=["7♥ from C2 moved to C1", "A♠ from C3 moved to foundation"],
+        )
+        content = path.read_text()
+        assert "## Moves" in content
+        assert "1. 7♥ from C2 moved to C1" in content
+        assert "2. A♠ from C3 moved to foundation" in content
+
+
+def test_save_moves_section_appears_after_table():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile(path, game_id="test").save(tableau, move_log=["X"])
+        content = path.read_text()
+        moves_idx = content.index("## Moves")
+        last_pipe_idx = content.rindex("|")
+        assert last_pipe_idx < moves_idx
+
+
+def test_save_moves_count_metadata_matches_log_length():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile(path, game_id="test").save(
+            tableau, move_log=["X", "Y", "Z"]
+        )
+        content = path.read_text()
+        assert "moves: 3" in content
 
 def test_load_returns_seven_columns():
     with tempfile.TemporaryDirectory() as tmp:

@@ -94,3 +94,18 @@ def test_apply_appends_move_to_history():
     game.apply(move)
     assert len(game.moves) == 1
     assert game.moves[0] is move
+
+
+def test_apply_moves_stack_to_destination_column():
+    tableau = make_tableau(
+        [face_up("♥", "7"), face_up("♠", "6"), face_up("♥", "5")],
+        [face_up("♥", "8")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=0, count=3, destination=ColumnDestination(1))
+    game.apply(move)
+    assert tableau.columns[0] == []
+    assert len(tableau.columns[1]) == 4
+    # Stack preserved in order: 8♥, 7♥, 6♠, 5♥
+    ranks = [c.rank for c in tableau.columns[1]]
+    assert ranks == ["8", "7", "6", "5"]

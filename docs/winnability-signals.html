@@ -1,0 +1,158 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Winnability Signals in Yukon Russian Solitaire</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+       max-width: 780px; margin: 2em auto; padding: 0 1em; color: #222; line-height: 1.55; }
+h1 { border-bottom: 2px solid #333; padding-bottom: 0.3em; }
+h2 { border-bottom: 1px solid #999; padding-bottom: 0.2em; margin-top: 2em; }
+h3 { margin-top: 1.5em; }
+table { border-collapse: collapse; margin: 1em 0; }
+th, td { border: 1px solid #aaa; padding: 6px 12px; text-align: left; }
+th { background: #f0f0f0; }
+tr:nth-child(even) td { background: #fafafa; }
+code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-size: 0.92em; }
+hr { border: none; border-top: 1px solid #aaa; margin: 2em 0; }
+ul { padding-left: 1.5em; }
+@media print {
+    body { max-width: none; margin: 0; }
+    h2 { page-break-before: auto; }
+}
+</style></head><body>
+<h1>Winnability Signals in Yukon Russian Solitaire</h1>
+<p><strong>Dataset:</strong> 10,000 Yukon Russian Solitaire games autoplayed with the <code>non-blocking</code> strategy.</p>
+<p><strong>Date analysed:</strong> 2026-05-12.</p>
+<p><strong>Source:</strong> <code>data/*.md</code> save files, all <code>strategy: non-blocking</code>.</p>
+<p><strong>Analysis script:</strong> <code>playground/winnability_signals.py</code>.</p>
+<p>This is a follow-up to <code>thousand-non-blocking-games.md</code> with a 10× larger sample. With ~10,000 deals we have proper statistical power on the rare buckets that the earlier 1,103-game writeup couldn't speak to with confidence.</p>
+<hr>
+<h2>Overall</h2>
+<ul>
+<li><strong>Games played:</strong> 10,000</li>
+<li><strong>Total wins:</strong> 405 (<strong>4.05% ± 0.39</strong>, 95% CI)</li>
+<li><strong>Avg moves per game:</strong> 16.9</li>
+<li><strong>Avg foundation cards at end:</strong> 4.8</li>
+<li><strong>Aborted games:</strong> 0 (anchored-King fix is holding)</li>
+</ul>
+<p>The non-blocking strategy wins about 1 in 25 deals — a slightly higher rate than the earlier 1,103-game sample (3.63%) but well within its confidence interval.</p>
+<hr>
+<h2>Significance methodology</h2>
+<p>For each slice of the data, the analysis script computes the win rate and the 95% CI half-width using a normal approximation: <code>1.96 × √(p(1−p)/n)</code>. A signal is flagged with <code>*</code> when its delta from baseline exceeds the half-width AND is greater than 0.5 percentage points. Negative signals exceeding the half-width are flagged <code>(low)</code>.</p>
+<p>This is a rough significance check (treats each game as independent, which they are; ignores multiple-testing correction, which would shrink some borderline calls). Treat single-asterisk results as "real but modest" and unflagged results as "within noise."</p>
+<hr>
+<h2>Single-feature signals</h2>
+<h3><code>c1_special</code> (Ace, King, or none in column 1)</h3>
+<table>
+<thead><tr><th>C1 card</th><th>Wins / Games</th><th>Win rate ± CI</th><th>Δ vs baseline</th></tr></thead>
+<tbody>
+<tr><td>A</td><td>49 / 797</td><td>6.15% ± 1.67</td><td><strong>+2.10</strong> *</td></tr>
+<tr><td>K</td><td>21 / 774</td><td>2.71% ± 1.14</td><td><strong>−1.34</strong> (low)</td></tr>
+<tr><td>none</td><td>335 / 8,429</td><td>3.97% ± 0.42</td><td>−0.08</td></tr>
+</tbody></table>
+<p><strong>Both the Ace bonus and the King penalty are statistically significant.</strong> An Ace in C1 lifts win rate from ~4% to ~6% — a ~50% relative boost. A King has the opposite effect.</p>
+<p>The 1,103-game sample couldn't detect either signal because the Ace bucket had only 95 games and the King bucket 83. Tenfold more data resolves the ambiguity.</p>
+<p>Why it makes sense: an Ace in C1 is an immediate foundation play that costs nothing — the C1 column had only one card to begin with. A King in C1 is anchored there for the entire game (anchored-King rule), permanently locking C1 until spades climb to Q.</p>
+<h3><code>kings_on_home_row</code></h3>
+<table>
+<thead><tr><th>Kings</th><th>Wins / Games</th><th>Win rate ± CI</th><th>Δ</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>260 / 6,046</td><td>4.30% ± 0.51</td><td>+0.25</td></tr>
+<tr><td>1</td><td>130 / 3,327</td><td>3.91% ± 0.66</td><td>−0.14</td></tr>
+<tr><td>2</td><td>14 / 589</td><td>2.38% ± 1.23</td><td><strong>−1.67</strong> (low)</td></tr>
+<tr><td>3</td><td>1 / 37</td><td>2.70% ± 5.23</td><td>−1.35 (small N)</td></tr>
+<tr><td>4</td><td>0 / 1</td><td>—</td><td>—</td></tr>
+</tbody></table>
+<p><strong>Only 2+ anchored Kings is a real signal.</strong> The earlier 1,103-game sample suggested 1 King hurt (2.72% vs 4.44%), but that result doesn't replicate with 10× the data. With 3,327 single-King games we now see 3.91% — within 0.66 percentage points of baseline. That earlier finding was a small-sample fluke.</p>
+<p>Two anchored Kings cuts win rate from ~4% to ~2.4%. Three anchored Kings shows a similar drag but the sample (37 games) is too small to be confident.</p>
+<h3>Per-column playability</h3>
+<table>
+<thead><tr><th>Column</th><th>Playable: rate ± CI</th><th>Not playable: rate ± CI</th><th>Δ</th></tr></thead>
+<tbody>
+<tr><td>C2</td><td>4.43% ± 0.54</td><td>3.58% ± 0.54</td><td>+0.85 (borderline)</td></tr>
+<tr><td>C3</td><td><strong>4.62% ± 0.56</strong></td><td>3.39% ± 0.52</td><td><strong>+1.23</strong> *</td></tr>
+<tr><td>C4</td><td>4.40% ± 0.55</td><td>3.64% ± 0.54</td><td>+0.76 (borderline)</td></tr>
+<tr><td>C5</td><td><strong>4.71% ± 0.56</strong></td><td>3.27% ± 0.52</td><td><strong>+1.44</strong> *</td></tr>
+<tr><td>C6</td><td><strong>4.91% ± 0.58</strong></td><td>3.03% ± 0.50</td><td><strong>+1.88</strong> *</td></tr>
+<tr><td>C7</td><td><strong>4.98% ± 0.58</strong></td><td>2.94% ± 0.49</td><td><strong>+2.04</strong> *</td></tr>
+</tbody></table>
+<p><strong>Four columns show real signals: C3, C5, C6, C7.</strong> The effect strengthens as you move right — C7 playability is the strongest individual column predictor, with about a 70% relative win-rate boost when its first face-up card has a same-suit-one-rank-higher target available elsewhere.</p>
+<p>C2 and C4 effects are positive but don't quite cross the threshold. They likely represent real but small advantages.</p>
+<p>The pattern makes sense: deeper columns have more cards, so making their bottom face-up card playable unlocks deeper sequences that would otherwise be stranded. Shallower columns offer less upside even when playable.</p>
+<hr>
+<h2>Aggregate signal: count of playable columns</h2>
+<p>This is the single strongest predictor in the dataset.</p>
+<table>
+<thead><tr><th>Playable count</th><th>Wins / Games</th><th>Win rate ± CI</th><th>Δ</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>0 / 77</td><td>0.00%</td><td><strong>−4.05</strong> (low)</td></tr>
+<tr><td>1</td><td>8 / 561</td><td>1.43% ± 0.98</td><td><strong>−2.62</strong> (low)</td></tr>
+<tr><td>2</td><td>39 / 1,905</td><td>2.05% ± 0.64</td><td><strong>−2.00</strong> (low)</td></tr>
+<tr><td>3</td><td>121 / 3,236</td><td>3.74% ± 0.65</td><td>−0.31</td></tr>
+<tr><td>4</td><td>130 / 2,818</td><td>4.61% ± 0.77</td><td>+0.56</td></tr>
+<tr><td>5</td><td>88 / 1,189</td><td><strong>7.40% ± 1.49</strong></td><td><strong>+3.35</strong> *</td></tr>
+<tr><td>6</td><td>19 / 214</td><td><strong>8.88% ± 3.81</strong></td><td><strong>+4.83</strong> *</td></tr>
+</tbody></table>
+<p>The relationship is monotonic and nearly linear from 1 to 5 playable. The jump from 4 to 5 playable nearly <em>doubles</em> the win rate.</p>
+<p><strong>The bottom and top of the distribution are striking.</strong> With 0 playable columns (0 wins in 77 games) you're effectively guaranteed to lose under non-blocking. With 6 playable (only 2.1% of deals) you win at over 2× the baseline rate.</p>
+<p>Most deals (54%) have 3 or 4 playable columns and sit near the baseline.</p>
+<hr>
+<h2>Combined signals</h2>
+<p>The single best combinations of <code>kings_on_home_row</code> and <code>playable_count</code> (filtered to buckets with N ≥ 20):</p>
+<table>
+<thead><tr><th>Kings</th><th>Playable</th><th>Win rate ± CI</th><th>Sample</th><th>Δ</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>6</td><td>8.88% ± 3.81</td><td>214</td><td>+4.83</td></tr>
+<tr><td>1</td><td>5</td><td>7.85% ± 3.82</td><td>191</td><td>+3.80</td></tr>
+<tr><td>0</td><td>5</td><td><strong>7.31% ± 1.62</strong></td><td>998</td><td><strong>+3.26</strong></td></tr>
+<tr><td>1</td><td>4</td><td>5.52% ± 1.55</td><td>834</td><td>+1.47</td></tr>
+<tr><td>0</td><td>4</td><td>4.31% ± 0.91</td><td>1,927</td><td>+0.26</td></tr>
+</tbody></table>
+<p>The most reliably "good" combination, with the most games in its bucket, is <strong>0 anchored Kings + 5 playable columns</strong> (998 games, 7.31% win rate).</p>
+<p>The bottom of the same table:</p>
+<table>
+<thead><tr><th>Kings</th><th>Playable</th><th>Win rate</th><th>Sample</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>1</td><td>0.00%</td><td>203</td></tr>
+<tr><td>1</td><td>0</td><td>0.00%</td><td>31</td></tr>
+<tr><td>0</td><td>0</td><td>0.00%</td><td>22</td></tr>
+<tr><td>2</td><td>1</td><td>1.02% ± 1.99</td><td>98</td></tr>
+<tr><td>2</td><td>4</td><td>1.75% ± 3.41</td><td>57</td></tr>
+</tbody></table>
+<p>The "0 Kings + 1 playable" bucket is the standout dud: 203 games, zero wins. Anchored Kings + few playable columns compound to near-zero winnability.</p>
+<hr>
+<h2>Composite deal-quality score</h2>
+<p><code>score = playable_count − 2·kings_on_home_row + (1 if c1 == "A" else 0)</code></p>
+<p>This rough hand-tuned combination uses what the data identifies as the strongest signals.</p>
+<table>
+<thead><tr><th>Score</th><th>Wins / Games</th><th>Win rate</th><th>Δ</th></tr></thead>
+<tbody>
+<tr><td>≤ −4</td><td>0 / 45</td><td>0.00%</td><td>−4.05</td></tr>
+<tr><td>−3</td><td>1 / 99</td><td>1.01% ± 1.97</td><td>−3.04 (low)</td></tr>
+<tr><td>−2</td><td>5 / 231</td><td>2.16% ± 1.88</td><td>−1.89 (low)</td></tr>
+<tr><td>−1</td><td>14 / 444</td><td>3.15% ± 1.63</td><td>−0.90</td></tr>
+<tr><td>0</td><td>18 / 853</td><td>2.11% ± 0.96</td><td>−1.94 (low)</td></tr>
+<tr><td>1</td><td>38 / 1,358</td><td>2.80% ± 0.88</td><td>−1.25 (low)</td></tr>
+<tr><td>2</td><td>62 / 1,678</td><td>3.69% ± 0.90</td><td>−0.36</td></tr>
+<tr><td>3</td><td>84 / 1,983</td><td>4.24% ± 0.89</td><td>+0.19</td></tr>
+<tr><td>4</td><td>79 / 1,960</td><td>4.03% ± 0.87</td><td>−0.02</td></tr>
+<tr><td>5</td><td>80 / 1,073</td><td><strong>7.46% ± 1.57</strong></td><td><strong>+3.41</strong> *</td></tr>
+<tr><td>6</td><td>21 / 260</td><td><strong>8.08% ± 3.31</strong></td><td><strong>+4.03</strong> *</td></tr>
+<tr><td>7</td><td>3 / 16</td><td>18.75% ± 19.13</td><td>small N</td></tr>
+</tbody></table>
+<p>The score stratifies the dataset cleanly — but only at the extremes. From scores 0 to 4 the win rate hovers near baseline. The big jumps are below score −2 (clearly unwinnable) and at score 5+ (significantly above baseline).</p>
+<p>A simple unweighted score isn't quite enough to predict winnability across the full range. A logistic regression or weighted feature model would likely separate scores 0–4 better.</p>
+<hr>
+<h2>Five takeaways</h2>
+<p>1. <strong>Count of playable columns is the strongest single predictor.</strong> Below 3 playable → losing odds. At 5+ → win rate roughly doubles.</p>
+<p>2. <strong>An Ace in C1 is a real ~50% boost.</strong> A King in C1 is a real penalty.</p>
+<p>3. <strong>C7 playability is the strongest individual column signal.</strong> Effect strengthens deeper in the tableau (C2 < C3 < C5 < C6 < C7).</p>
+<p>4. <strong>One anchored King does NOT hurt at this sample size.</strong> The earlier impression that it did was a small-sample fluke. Two anchored Kings is the threshold for real damage.</p>
+<p>5. <strong>The combined sweet spot is 0–1 anchored Kings AND 5+ playable columns.</strong> Roughly 12% of deals hit this profile and win at almost twice the baseline rate.</p>
+<hr>
+<h2>Caveats</h2>
+<ul>
+<li>Dataset is autoplay-only. The same deal-time signals may behave differently under human play with foresight.</li>
+<li>All correlations are conditional on the <code>non-blocking</code> strategy. The earlier <code>nply-3</code> analysis showed a different signal pattern (weaker per-column effects, an inverted Kings-on-home-row signal at low counts, lookahead finding wins from "bad" deal positions). Different strategies "see" different deals as winnable.</li>
+<li>Deals are randomly shuffled. Some are mathematically unwinnable; what we call "win rate" mixes "deal winnability" with "strategy quality."</li>
+<li>Significance check is normal-approximation-based and ignores multiple-testing correction. Borderline single-asterisk results should be treated as "real but modest," not "definitely real."</li>
+</ul>
+</body></html>

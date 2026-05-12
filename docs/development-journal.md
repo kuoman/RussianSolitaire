@@ -4,6 +4,29 @@ A chronicle of the journey building a Russian Solitaire game in Python, followin
 
 ---
 
+## Current State (as of 2026-05-12)
+
+The game is fully playable from the terminal. See [`../README.md`](../README.md)
+for a top-level overview and [`gameplay.md`](gameplay.md) for CLI usage.
+
+Highlights since project inception:
+
+- Domain model complete: `Card`, `Deck`, `Tableau`, `Foundation`,
+  `Foundations`, `Game`, `Move`, `MoveGenerator`, `MoveFilter`
+- Interactive REPL with numbered move list, foundation-preferred filtering,
+  and win/loss detection
+- Markdown-based save format under `./data/`, with version, deal metadata,
+  outcome, and full move log; load-and-resume works
+- Autoplay with three strategies (`first`, `non-blocking`, `nply --depth N`)
+- Anchored-King domain rule: a King at the deepest position of its column
+  can only leave to the foundation as a single card
+- 251 tests passing under pytest, all sub-second
+
+The journal entries below capture the historical narrative; see
+[`../CLAUDE.md`](../CLAUDE.md) for current conventions.
+
+---
+
 ## 2026-05-04: Project Inception
 
 ### Initial Research

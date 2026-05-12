@@ -6,10 +6,13 @@ Russian Solitaire is a single-player card game variant of Yukon. The key differe
 ## Setup
 - **Deck**: Single standard 52-card deck
 - **Tableau**: 7 columns with 1, 6, 7, 8, 9, 10, 11 cards respectively
-  - Top 5 cards in each column are face-up
-  - Remaining cards underneath are face-down
-- **Stock**: None - all cards are dealt at the start
-- **Foundations**: 4 piles (one per suit)
+  - The **top up to 5 cards** in each column are face-up; the remainder are face-down
+  - Column 1 has a single card, which is face-up
+  - Columns 2 and 3 are entirely face-up (6 and 7 cards, but only the top 5 are
+    "exposed" — face-down cards exist only when the column has more than 5)
+  - Columns 4–7 each have face-down cards underneath their top 5 face-up cards
+- **Stock**: None — all 52 cards are dealt at the start (no draw pile)
+- **Foundations**: 4 piles, one per suit, initially empty
 
 ## Objective
 Build all four foundation piles from Ace to King by suit.
@@ -34,6 +37,24 @@ Build all four foundation piles from Ace to King by suit.
 ## Revealing Cards
 - When a face-down card becomes the top card of a tableau column, it is immediately turned face-up
 - Empty columns can be filled with any King (and any cards beneath it)
+
+## Anchored King Rule (House Rule)
+
+This implementation enforces an **Anchored King** constraint:
+
+- A King that is the **deepest (bottommost) card** of its column — i.e. the
+  one originally dealt face-up at column index 0 — is *anchored*.
+- An anchored King may only be moved by sending it **directly to its
+  foundation** as a single card. It cannot lead a same-suit run into another
+  column, and it cannot move with cards on top of it.
+- A King that ends up at the bottom of an empty column after moving (e.g. a
+  King moved from one tableau pile to a freshly-emptied column) is not
+  anchored by this rule until/unless it is the originally-dealt deepest
+  card of its column.
+
+In practice: each of the seven columns starts with one face-up card at its
+bottom; if that card is a King, it stays put — only foundation play can
+remove it. This prevents pathological "infinite re-King" reshuffling.
 
 ## Winning
 The game is won when all four foundations are complete (A through K in each suit).

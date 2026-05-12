@@ -177,3 +177,13 @@ def test_apply_to_foundation_auto_flips_exposed_card():
     assert len(tableau.columns[0]) == 1
     assert tableau.columns[0][0].face_up is True
     assert tableau.columns[0][0].rank == "5"
+
+
+def test_is_won_when_all_52_cards_on_foundations():
+    # Build a game where the foundations are already complete
+    tableau = make_tableau([])
+    game = Game(tableau)
+    for suit in ("♠", "♥", "♦", "♣"):
+        for rank in ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]:
+            game.foundations.add(face_up(suit, rank))
+    assert game.is_won is True

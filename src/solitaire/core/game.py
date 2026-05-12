@@ -39,4 +39,9 @@ class Game:
         if destination.is_column():
             columns[destination.column_index()].extend(moving_cards)
 
+        new_source_col = columns[move.source_column]
+        if new_source_col and not new_source_col[-1].face_up:
+            exposed = new_source_col[-1]
+            new_source_col[-1] = Card(exposed.suit, exposed.rank, face_up=True)
+
         self._moves.append(move)

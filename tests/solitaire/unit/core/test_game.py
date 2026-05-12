@@ -109,3 +109,42 @@ def test_apply_moves_stack_to_destination_column():
     # Stack preserved in order: 8♥, 7♥, 6♠, 5♥
     ranks = [c.rank for c in tableau.columns[1]]
     assert ranks == ["8", "7", "6", "5"]
+
+
+def test_apply_flips_newly_exposed_face_down_card():
+    # Source column: [↓5♠, 7♥]. Move 7♥ to column with 8♥.
+    # After move, source column should be [5♠ face-up].
+    tableau = make_tableau(
+        [face_down("♠", "5"), face_up("♥", "7")],
+        [face_up("♥", "8")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=ColumnDestination(1))
+    game.apply(move)
+    assert len(tableau.columns[0]) == 1
+    assert tableau.columns[0][0].rank == "5"
+    assert tableau.columns[0][0].suit == "♠"
+    assert tableau.columns[0][0].face_up is True
+
+
+def test_apply_does_not_flip_when_exposed_card_already_face_up():
+    tableau = make_tableau(
+        [face_up("♠", "5"), face_up("♥", "7")],
+        [face_up("♥", "8")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=ColumnDestination(1))
+    game.apply(move)
+    assert tableau.columns[0][0].face_up is True
+    assert tableau.columns[0][0].rank == "5"
+
+
+def test_apply_leaves_empty_source_column_empty():
+    tableau = make_tableau(
+        [face_up("♥", "7")],
+        [face_up("♥", "8")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=ColumnDestination(1))
+    game.apply(move)
+    assert tableau.columns[0] == []

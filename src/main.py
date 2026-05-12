@@ -15,6 +15,7 @@ from solitaire.core.deck import Deck
 from solitaire.core.game import Game
 from solitaire.core.tableau import Tableau
 from solitaire.display import Display
+from solitaire.persistence.game_analyzer import GameAnalyzer
 from solitaire.persistence.game_registry import GameRegistry
 from solitaire.persistence.game_file import GameFile
 from solitaire.repl.repl import Repl
@@ -35,20 +36,22 @@ def _load_tableau(path_str: str):
         print(f"Error: malformed save file: {e}", file=sys.stderr)
         sys.exit(1)
     save_target = GameFile(path, game_id=path.stem)
-    return tableau, save_target
+    metadata = getattr(tableau, "prior_metadata", {})
+    return tableau, save_target, metadata
 
 
 def _new_tableau(no_save: bool):
     deck = Deck()
     deck.shuffle()
     tableau = Tableau(deck)
+    metadata = GameAnalyzer(tableau).analyse()
     if no_save:
-        return tableau, None
+        return tableau, None, metadata
     game_path = GameRegistry(DATA_DIR).next_game_path(date.today())
     save_target = GameFile(game_path, game_id=game_path.stem)
-    save_target.save(tableau)
+    save_target.save(tableau, metadata=metadata)
     print(f"Game saved to {game_path}")
-    return tableau, save_target
+    return tableau, save_target, metadata
 
 
 def _build_strategy(strategy_name, depth):
@@ -66,6 +69,7 @@ def _run_autoplay(game, save_target, strategy):
     if save_target is not None:
         save_target.save(
             game.tableau,
+            metadata=game.metadata,
             won=outcome,
             foundation_cards=game.foundations.total_cards,
             move_log=game.move_descriptions,
@@ -85,17 +89,19 @@ def _run_batch(args):
         deck = Deck()
         deck.shuffle()
         tableau = Tableau(deck)
-        game = Game(tableau)
+        metadata = GameAnalyzer(tableau).analyse()
+        game = Game(tableau, metadata=metadata)
         save_target = None
         if not args.no_save:
             game_path = GameRegistry(DATA_DIR).next_game_path(date.today())
             save_target = GameFile(game_path, game_id=game_path.stem)
-            save_target.save(tableau)
+            save_target.save(tableau, metadata=metadata)
         strategy = _build_strategy(args.strategy, args.depth)
         outcome = Autoplayer(game, strategy=strategy).play()
         if save_target is not None:
             save_target.save(
                 game.tableau,
+                metadata=metadata,
                 won=outcome,
                 foundation_cards=game.foundations.total_cards,
                 move_log=game.move_descriptions,
@@ -158,11 +164,11 @@ def main():
         _run_batch(args)
         return
 
-    tableau, save_target = (
+    tableau, save_target, metadata = (
         _load_tableau(args.load) if args.load else _new_tableau(args.no_save)
     )
     prior_moves = getattr(tableau, "prior_moves", None)
-    game = Game(tableau, prior_moves=prior_moves)
+    game = Game(tableau, prior_moves=prior_moves, metadata=metadata)
 
     if args.autoplay:
         strategy = _build_strategy(args.strategy, args.depth)

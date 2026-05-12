@@ -56,3 +56,46 @@ def test_move_remembers_destination():
     dest = ColumnDestination(5)
     move = Move(source_column=2, count=3, destination=dest)
     assert move.destination == dest
+
+
+def make_tableau(*columns):
+    return _RawTableau([list(col) for col in columns])
+
+
+def test_move_with_count_zero_is_illegal():
+    tableau = make_tableau([face_up("♠", "A")])
+    foundations = Foundations()
+    move = Move(source_column=0, count=0, destination=ColumnDestination(1))
+    assert move.is_legal_on(tableau, foundations) is False
+
+
+def test_move_with_negative_count_is_illegal():
+    tableau = make_tableau([face_up("♠", "A")])
+    foundations = Foundations()
+    move = Move(source_column=0, count=-1, destination=ColumnDestination(1))
+    assert move.is_legal_on(tableau, foundations) is False
+
+
+def test_move_with_source_column_out_of_range_is_illegal():
+    tableau = make_tableau([face_up("♠", "A")])
+    foundations = Foundations()
+    move = Move(source_column=99, count=1, destination=ColumnDestination(1))
+    assert move.is_legal_on(tableau, foundations) is False
+
+
+def test_move_with_count_larger_than_column_is_illegal():
+    tableau = make_tableau([face_up("♠", "A")])
+    foundations = Foundations()
+    move = Move(source_column=0, count=2, destination=ColumnDestination(1))
+    assert move.is_legal_on(tableau, foundations) is False
+
+
+def test_move_with_face_down_source_card_is_illegal():
+    tableau = make_tableau(
+        [face_down("♣", "5"), face_up("♥", "8"), face_up("♠", "9")],
+        [face_up("♥", "10")],
+    )
+    # count=3 would include the face-down 5♣ as the topmost — illegal
+    foundations = Foundations()
+    move = Move(source_column=0, count=3, destination=ColumnDestination(1))
+    assert move.is_legal_on(tableau, foundations) is False

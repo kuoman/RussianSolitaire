@@ -20,24 +20,28 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 def _load_tableau(path_str: str):
     path = Path(path_str)
     try:
-        return GameFile(path, game_id=path.stem).load()
+        tableau = GameFile(path, game_id=path.stem).load()
     except FileNotFoundError:
         print(f"Error: save file not found: {path_str}", file=sys.stderr)
         sys.exit(1)
     except ValueError as e:
         print(f"Error: malformed save file: {e}", file=sys.stderr)
         sys.exit(1)
+    save_target = GameFile(path, game_id=path.stem)
+    return tableau, save_target
 
 
 def _new_tableau(no_save: bool):
     deck = Deck()
     deck.shuffle()
     tableau = Tableau(deck)
-    if not no_save:
-        game_path = GameRegistry(DATA_DIR).next_game_path(date.today())
-        GameFile(game_path, game_id=game_path.stem).save(tableau)
-        print(f"Game saved to {game_path}")
-    return tableau
+    if no_save:
+        return tableau, None
+    game_path = GameRegistry(DATA_DIR).next_game_path(date.today())
+    save_target = GameFile(game_path, game_id=game_path.stem)
+    save_target.save(tableau)
+    print(f"Game saved to {game_path}")
+    return tableau, save_target
 
 
 def main():
@@ -47,10 +51,12 @@ def main():
     parser.add_argument("--load", metavar="PATH", help="Load a saved game file")
     args = parser.parse_args()
 
-    tableau = _load_tableau(args.load) if args.load else _new_tableau(args.no_save)
+    tableau, save_target = (
+        _load_tableau(args.load) if args.load else _new_tableau(args.no_save)
+    )
     game = Game(tableau)
     display = Display(tableau, debug=args.debug, foundations=game.foundations)
-    Repl(game, display).run()
+    Repl(game, display, save_target=save_target).run()
 
 
 if __name__ == "__main__":

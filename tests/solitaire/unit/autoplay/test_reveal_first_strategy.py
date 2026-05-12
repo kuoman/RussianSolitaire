@@ -26,23 +26,17 @@ def test_returns_a_move_from_visible_list():
 
 def test_prefers_revealing_move_over_non_revealing():
     # Two moves: one reveals a face-down card, the other doesn't.
-    # C1: [↓5♠, 7♥] — moving 7♥ reveals 5♠.
-    # C2: empty (so K♥ from C3 could go there).
-    # Wait — let's make this cleaner. Two columns each able to contribute a move.
     #
     # Setup:
-    #   C1: [↓5♠, 7♥]      (move 7♥ to C2 reveals 5♠)
-    #   C2: [face_up("♥", "8")]  (destination for 7♥)
-    #   C3: [face_up("♣", "K")]  (K can move to empty C4)
-    #   C4: empty
-    # The K♣ → C4 move reveals nothing (C3 had only 1 card, now empty).
-    # The 7♥ → C2 move reveals 5♠.
-    # Strategy should pick the 7♥ move.
+    #   C1: [↓5♠, 7♥]   (move 7♥ to C2 reveals 5♠)
+    #   C2: [8♥]        (destination for 7♥)
+    #   C3: [Q♣]        (move Q♣ to K♣ on C4 reveals nothing — only 1 card in C3)
+    #   C4: [K♣]
     game = make_game(
         [face_down("♠", "5"), face_up("♥", "7")],
         [face_up("♥", "8")],
+        [face_up("♣", "Q")],
         [face_up("♣", "K")],
-        [],
         [], [], [],
     )
     reveal_move = Move(source_column=0, count=1, destination=ColumnDestination(1))
@@ -97,12 +91,13 @@ def test_when_no_reveal_available_picks_foundation_over_column():
 
 def test_does_not_crash_when_count_equals_column_length():
     # Moving the entire column — no reveal possible (column becomes empty).
+    # C1: [Q♣] (single non-king card), moving onto K♣ on C2.
+    # count=1=len(C1), exercising the "count >= len(src_col)" branch.
     game = make_game(
-        [face_up("♠", "K")],
-        [],
+        [face_up("♣", "Q")],
+        [face_up("♣", "K")],
         [], [], [], [], [],
     )
     only = Move(source_column=0, count=1, destination=ColumnDestination(1))
-    # Should not crash on the "move count equals column length" branch.
     chosen = RevealFirstStrategy().select(game, [only])
     assert chosen is only

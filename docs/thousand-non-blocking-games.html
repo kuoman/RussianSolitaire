@@ -1,0 +1,124 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Thousand Non-Blocking Games</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+       max-width: 780px; margin: 2em auto; padding: 0 1em; color: #222; line-height: 1.55; }
+h1 { border-bottom: 2px solid #333; padding-bottom: 0.3em; }
+h2 { border-bottom: 1px solid #999; padding-bottom: 0.2em; margin-top: 2em; }
+h3 { margin-top: 1.5em; }
+table { border-collapse: collapse; margin: 1em 0; }
+th, td { border: 1px solid #aaa; padding: 6px 12px; text-align: left; }
+th { background: #f0f0f0; }
+tr:nth-child(even) td { background: #fafafa; }
+code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-size: 0.92em; }
+hr { border: none; border-top: 1px solid #aaa; margin: 2em 0; }
+ul { padding-left: 1.5em; }
+@media print {
+    body { max-width: none; margin: 0; }
+    h2 { page-break-before: auto; }
+}
+</style></head><body>
+<h1>Thousand Non-Blocking Games</h1>
+<p><strong>Dataset:</strong> 1,103 Yukon Russian Solitaire games autoplayed with the <code>non-blocking</code> strategy.</p>
+<p><strong>Date analysed:</strong> 2026-05-12.</p>
+<p><strong>Source:</strong> <code>data/*.md</code> save files filtered by <code>strategy: non-blocking</code>.</p>
+<p><strong>Analysis script:</strong> <code>playground/analyze_non_blocking.py</code>.</p>
+<hr>
+<h2>Overall</h2>
+<ul>
+<li><strong>Games played:</strong> 1,103</li>
+<li><strong>Total wins:</strong> 40 (<strong>3.63%</strong>)</li>
+</ul>
+<p>The <code>non-blocking</code> strategy wins about 1 in 28 deals.</p>
+<hr>
+<h2>Win rate by C1 special card</h2>
+<p>The first column's only card is dealt face-up. Some deals start with an Ace or King in that slot.</p>
+<table>
+<thead><tr><th>C1 card</th><th>Wins / Games</th><th>Win rate</th></tr></thead>
+<tbody>
+<tr><td>A</td><td>4 / 95</td><td>4.21%</td></tr>
+<tr><td>K</td><td>2 / 83</td><td>2.41%</td></tr>
+<tr><td>none</td><td>34 / 925</td><td>3.68%</td></tr>
+</tbody></table>
+<p>An Ace in C1 wins slightly more often than the baseline; a King wins less. Sample sizes (95 and 83 games) are small enough that these differences are within noise — an Ace's tiny advantage makes intuitive sense (immediate foundation play available) but isn't statistically conclusive at this dataset size.</p>
+<hr>
+<h2>Win rate by <code>kings_on_home_row</code></h2>
+<p><code>kings_on_home_row</code> counts how many of columns C2–C7 have a King as their first face-up card. Anchored Kings (Kings at <code>column[0]</code>) cannot move except to the foundation.</p>
+<table>
+<thead><tr><th>Kings on home row</th><th>Wins / Games</th><th>Win rate</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>30 / 676</td><td><strong>4.44%</strong></td></tr>
+<tr><td>1</td><td>10 / 367</td><td>2.72%</td></tr>
+<tr><td>2</td><td>0 / 54</td><td>0.00%</td></tr>
+<tr><td>3</td><td>0 / 6</td><td>0.00%</td></tr>
+</tbody></table>
+<p>This is a real signal. Each anchored King reduces win rate sharply:</p>
+<ul>
+<li>0 anchored Kings → 4.44%</li>
+<li>1 anchored King → 2.72% (38% relative drop)</li>
+<li>2 anchored Kings → 0 wins in 54 games</li>
+<li>3 anchored Kings → 0 wins in 6 games</li>
+</ul>
+<p>This matches the anchored-King domain rule: a King at <code>column[0]</code> permanently locks that column until it goes to foundation. Two locked columns out of seven means most of the board can't be reorganized productively.</p>
+<h3>Distribution</h3>
+<table>
+<thead><tr><th>Kings</th><th>Games</th><th>Share</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>676</td><td>61.29%</td></tr>
+<tr><td>1</td><td>367</td><td>33.27%</td></tr>
+<tr><td>2</td><td>54</td><td>4.90%</td></tr>
+<tr><td>3</td><td>6</td><td>0.54%</td></tr>
+</tbody></table>
+<p>About 95% of deals have at most one anchored King. Three or more is rare.</p>
+<hr>
+<h2>Win rate by individual column playability</h2>
+<p><code>cN_playable</code> is <code>true</code> when column N's first face-up card has a same-suit, one-rank-higher partner face-up somewhere else on the tableau (i.e., a legal first move exists for that column).</p>
+<table>
+<thead><tr><th>Column</th><th>Playable: wins/games (rate)</th><th>Not playable: wins/games (rate)</th></tr></thead>
+<tbody>
+<tr><td>C2</td><td>19/593 (3.20%)</td><td>21/510 (4.12%)</td></tr>
+<tr><td>C3</td><td>24/579 (4.15%)</td><td>16/524 (3.05%)</td></tr>
+<tr><td>C4</td><td>23/583 (3.95%)</td><td>17/520 (3.27%)</td></tr>
+<tr><td>C5</td><td>31/572 (<strong>5.42%</strong>)</td><td>9/531 (1.69%)</td></tr>
+<tr><td>C6</td><td>30/589 (<strong>5.09%</strong>)</td><td>10/514 (1.95%)</td></tr>
+<tr><td>C7</td><td>27/616 (4.38%)</td><td>13/487 (2.67%)</td></tr>
+</tbody></table>
+<p>C5 and C6 playability are the strongest individual signals — having a target available roughly <strong>triples</strong> win rate (5.42% vs 1.69%, 5.09% vs 1.95%). C3, C4, and C7 show milder positive correlations. C2 is mildly inverted, likely a quirk of how non-blocking interacts with C2's shallow stack (only 6 cards, mostly face-up at deal time).</p>
+<hr>
+<h2>Win rate by count of playable columns</h2>
+<p>This aggregates the per-column flags into a single deal-quality count, ranging 0–6.</p>
+<table>
+<thead><tr><th>Playable count</th><th>Wins / Games</th><th>Win rate</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>0 / 7</td><td>0.00%</td></tr>
+<tr><td>1</td><td>0 / 73</td><td>0.00%</td></tr>
+<tr><td>2</td><td>4 / 203</td><td>1.97%</td></tr>
+<tr><td>3</td><td>10 / 377</td><td>2.65%</td></tr>
+<tr><td>4</td><td>17 / 311</td><td><strong>5.47%</strong></td></tr>
+<tr><td>5</td><td>6 / 114</td><td>5.26%</td></tr>
+<tr><td>6</td><td>3 / 18</td><td><strong>16.67%</strong></td></tr>
+</tbody></table>
+<p>A clear monotonic-ish trend. Roughly:</p>
+<ul>
+<li><strong>0–1 playable</strong> → effectively unwinnable for <code>non-blocking</code> (0 wins in 80 games)</li>
+<li><strong>2–3 playable</strong> → below average (~2%)</li>
+<li><strong>4–5 playable</strong> → above average (~5%)</li>
+<li><strong>6 playable</strong> → very rare (1.6% of deals) but win rate jumps to 16.67% (3/18)</li>
+</ul>
+<p>The 4-playable bucket holds the largest share of wins (17/40, 42.5%) since it's both common and above-average.</p>
+<hr>
+<h2>Combined takeaways</h2>
+<p>1. <strong>More playable columns at deal time means higher win rate.</strong> Roughly linear from 2 to 4, with a possible spike at 6 playable.</p>
+<p>2. <strong>C5 and C6 are the most predictive individual columns</strong> — playability there is a much stronger signal than C2's.</p>
+<p>3. <strong>Anchored Kings hurt sharply.</strong> Two or more anchored Kings have produced zero wins in 60 games.</p>
+<p>4. <strong>C1 advantage is weak.</strong> Ace-in-C1 trends positive but is noise at this sample size; King-in-C1 trends negative for similar-noise reasons.</p>
+<p>5. The deal-time metadata (<code>c1_special</code>, <code>cN_playable</code>, <code>kings_on_home_row</code>) collectively captures meaningful, predictive information about winnability. A composite deal-quality score like <code>4 × playable_count − 6 × kings_on_home_row + (2 if c1 == "A" else 0)</code> might stratify wins cleanly — worth testing against a larger dataset.</p>
+<hr>
+<h2>Caveats</h2>
+<ul>
+<li>This dataset is autoplay-only. Human play with foresight would presumably win more often, and the per-feature correlations may shift.</li>
+<li>The <code>non-blocking</code> strategy itself biases the data — its preference for preserving future move count is one specific heuristic among many.</li>
+<li>All deals were freshly shuffled. Some deals are mathematically unwinnable; the wins/total ratios mix "strategy quality" with "deal winnability."</li>
+<li>Sample sizes for rare buckets (<code>kings_on_home_row >= 2</code>, 6 playable columns, etc.) are small. Treat percentages there as suggestive rather than precise.</li>
+</ul>
+</body></html>

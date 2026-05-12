@@ -1,0 +1,112 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Thousand N-ply (depth 3) Games</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+       max-width: 780px; margin: 2em auto; padding: 0 1em; color: #222; line-height: 1.55; }
+h1 { border-bottom: 2px solid #333; padding-bottom: 0.3em; }
+h2 { border-bottom: 1px solid #999; padding-bottom: 0.2em; margin-top: 2em; }
+h3 { margin-top: 1.5em; }
+table { border-collapse: collapse; margin: 1em 0; }
+th, td { border: 1px solid #aaa; padding: 6px 12px; text-align: left; }
+th { background: #f0f0f0; }
+tr:nth-child(even) td { background: #fafafa; }
+code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-size: 0.92em; }
+hr { border: none; border-top: 1px solid #aaa; margin: 2em 0; }
+ul { padding-left: 1.5em; }
+@media print {
+    body { max-width: none; margin: 0; }
+    h2 { page-break-before: auto; }
+}
+</style></head><body>
+<h1>Thousand N-ply (depth 3) Games</h1>
+<p><strong>Dataset:</strong> 1,100 Yukon Russian Solitaire games autoplayed with the <code>nply --depth 3</code> strategy.</p>
+<p><strong>Date analysed:</strong> 2026-05-12.</p>
+<p><strong>Source:</strong> <code>data/*.md</code> save files filtered by <code>strategy: nply-3</code>.</p>
+<p><strong>Analysis script:</strong> <code>playground/analyze_strategy.py</code>.</p>
+<hr>
+<h2>Overall</h2>
+<ul>
+<li><strong>Games played:</strong> 1,100</li>
+<li><strong>Total wins:</strong> 41 (<strong>3.73%</strong>)</li>
+</ul>
+<p>The <code>nply --depth 3</code> strategy wins about 1 in 27 deals — essentially identical to <code>non-blocking</code>'s 3.63%. The interesting differences are in <em>which</em> deals each strategy wins.</p>
+<hr>
+<h2>Win rate by C1 special card</h2>
+<table>
+<thead><tr><th>C1 card</th><th>Wins / Games</th><th>Win rate</th></tr></thead>
+<tbody>
+<tr><td>A</td><td>3 / 74</td><td>4.05%</td></tr>
+<tr><td>K</td><td>3 / 97</td><td>3.09%</td></tr>
+<tr><td>none</td><td>35 / 929</td><td>3.77%</td></tr>
+</tbody></table>
+<p>Like with <code>non-blocking</code>, an Ace in C1 trends positive and a King trends negative, but sample sizes (74 and 97 games) keep the differences within noise.</p>
+<hr>
+<h2>Win rate by <code>kings_on_home_row</code></h2>
+<p>This is where <code>nply-3</code> diverges most from <code>non-blocking</code>.</p>
+<table>
+<thead><tr><th>Kings on home row</th><th>Wins / Games</th><th>Win rate</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>18 / 639</td><td>2.82%</td></tr>
+<tr><td>1</td><td>23 / 398</td><td><strong>5.78%</strong></td></tr>
+<tr><td>2</td><td>0 / 56</td><td>0.00%</td></tr>
+<tr><td>3</td><td>0 / 7</td><td>0.00%</td></tr>
+</tbody></table>
+<p><strong>Inverted signal.</strong> With 1 King anchored on the home row, <code>nply-3</code> wins more than twice as often as it does with 0 (5.78% vs 2.82%). For <code>non-blocking</code> the relationship is the reverse (4.44% with 0 anchored Kings, dropping to 2.72% with 1).</p>
+<p>Hypothesis: <code>nply-3</code>'s lookahead can find foundation-building paths that <em>use</em> an anchored King — it's a guaranteed late-game foundation play once spades climb to Q. <code>non-blocking</code>'s "preserve future options" heuristic treats the same King as a constraint and avoids working around it. With 0 anchored Kings, <code>nply-3</code>'s lookahead has more freedom but also more decision noise; with 1 King, the constraint focuses the search toward viable lines.</p>
+<p>2+ anchored Kings still kills both strategies dead — that's a structural barrier no strategy in the dataset has cracked.</p>
+<h3>Distribution</h3>
+<table>
+<thead><tr><th>Kings</th><th>Games</th><th>Share</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>639</td><td>58.09%</td></tr>
+<tr><td>1</td><td>398</td><td>36.18%</td></tr>
+<tr><td>2</td><td>56</td><td>5.09%</td></tr>
+<tr><td>3</td><td>7</td><td>0.64%</td></tr>
+</tbody></table>
+<hr>
+<h2>Win rate by individual column playability</h2>
+<table>
+<thead><tr><th>Column</th><th>Playable: wins/games (rate)</th><th>Not playable: wins/games (rate)</th></tr></thead>
+<tbody>
+<tr><td>C2</td><td>22/590 (3.73%)</td><td>19/510 (3.73%)</td></tr>
+<tr><td>C3</td><td>26/607 (4.28%)</td><td>15/493 (3.04%)</td></tr>
+<tr><td>C4</td><td>24/587 (4.09%)</td><td>17/513 (3.31%)</td></tr>
+<tr><td>C5</td><td>20/588 (3.40%)</td><td>21/512 (4.10%)</td></tr>
+<tr><td>C6</td><td>26/583 (<strong>4.46%</strong>)</td><td>15/517 (2.90%)</td></tr>
+<tr><td>C7</td><td>28/618 (<strong>4.53%</strong>)</td><td>13/482 (2.70%)</td></tr>
+</tbody></table>
+<p><code>nply-3</code>'s per-column signals are flatter than <code>non-blocking</code>'s. C6 and C7 still trend positive — having a target gives ~50% better odds — but the differences are smaller than non-blocking's (where C5 and C6 playability roughly <em>tripled</em> the win rate).</p>
+<p>C5 is mildly <em>inverted</em> under nply-3 (3.40% playable vs 4.10% not), the opposite of non-blocking's strongest signal column.</p>
+<p>The takeaway: <strong>lookahead reduces dependence on any single deal-time feature.</strong> Where <code>non-blocking</code> leans heavily on C5–C6 playability, <code>nply-3</code> finds wins more uniformly across deal shapes.</p>
+<hr>
+<h2>Win rate by count of playable columns</h2>
+<table>
+<thead><tr><th>Playable count</th><th>Wins / Games</th><th>Win rate</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>0 / 8</td><td>0.00%</td></tr>
+<tr><td>1</td><td>3 / 72</td><td><strong>4.17%</strong></td></tr>
+<tr><td>2</td><td>6 / 212</td><td>2.83%</td></tr>
+<tr><td>3</td><td>10 / 354</td><td>2.82%</td></tr>
+<tr><td>4</td><td>12 / 286</td><td>4.20%</td></tr>
+<tr><td>5</td><td>7 / 137</td><td>5.11%</td></tr>
+<tr><td>6</td><td>3 / 31</td><td><strong>9.68%</strong></td></tr>
+</tbody></table>
+<p>The standout cell here is <strong>1 playable column → 4.17% win rate</strong> (3/72). Compare with <code>non-blocking</code>: 0 wins out of 73 games in that bucket. This is the lookahead pay-off — <code>nply-3</code> finds wins in deals that simpler heuristics give up on.</p>
+<p>The trade-off: with 6 playable columns (the rich deals), <code>nply-3</code> wins 9.68% (3/31) versus <code>non-blocking</code>'s 16.67% (3/18). Lookahead doesn't capitalize on good deals as aggressively.</p>
+<p>Mid-range deals (2–5 playable) show comparable win rates between the two strategies.</p>
+<hr>
+<h2>Combined takeaways</h2>
+<p>1. <strong>Same overall win rate, very different play patterns.</strong> Both strategies win ~3.7% of deals, but <code>nply-3</code> finds wins in deals <code>non-blocking</code> rejects (1 playable column) while <code>non-blocking</code> exploits rich deals (6 playable) more aggressively.</p>
+<p>2. <strong>The Kings-on-home-row inversion is the most striking finding.</strong> Anchored Kings can <em>help</em> when paired with lookahead by reducing search-space ambiguity. Worth digging deeper — does the King-friendly bias hold up at higher depths?</p>
+<p>3. <strong><code>nply-3</code>'s per-column signals are flatter</strong> — lookahead reduces dependence on any single feature.</p>
+<p>4. <strong>Both strategies fail completely with 2+ anchored Kings.</strong> A hard structural barrier.</p>
+<p>5. <strong>Ensemble or hybrid strategies might outperform either alone.</strong> Try <code>nply</code> for low-playable deals, <code>non-blocking</code> for high-playable. Or augment <code>nply</code>'s leaf evaluator with a "preserve future options" term.</p>
+<hr>
+<h2>Caveats</h2>
+<ul>
+<li>Autoplay-only data — human play with foresight may show different correlations.</li>
+<li><code>nply --depth 3</code> evaluator is <code>foundations.total_cards + 0.1 * face_up_count</code>. Different evaluators or depths may shift these numbers significantly.</li>
+<li>All deals freshly shuffled; some are mathematically unwinnable. Wins/total ratios mix strategy quality with deal winnability.</li>
+<li>Sample sizes for rare buckets (<code>kings_on_home_row >= 2</code>, 0–1 playable columns, 6 playable columns) are small. Treat percentages there as suggestive rather than precise.</li>
+</ul>
+</body></html>

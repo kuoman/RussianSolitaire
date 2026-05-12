@@ -340,3 +340,124 @@ def test_load_metadata_converts_kings_on_home_row_to_int():
         loaded = gf.load()
         # kings_on_home_row is numeric; round-trip should yield an int
         assert isinstance(loaded.prior_metadata["kings_on_home_row"], int)
+
+
+def test_save_writes_initial_deal_section():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau)
+        content = path.read_text()
+        assert "## Initial Deal" in content
+
+
+def test_initial_save_omits_final_state_section():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau)  # initial save, no initial_tableau passed
+        content = path.read_text()
+        assert "## Final State" not in content
+
+
+def test_save_writes_final_state_when_initial_tableau_provided():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        initial = _RawTableau([
+            [Card("♠", "A", face_up=True)],
+            [], [], [], [], [], [],
+        ])
+        final = _RawTableau([
+            [],  # A♠ moved to foundation
+            [], [], [], [], [], [],
+        ])
+        gf = GameFile(path, game_id="test")
+        gf.save(
+            final,
+            initial_tableau=initial,
+            metadata={"c1_special": "A"},
+            won="false",
+            foundation_cards=1,
+        )
+        content = path.read_text()
+        assert "## Initial Deal" in content
+        assert "## Final State" in content
+
+
+def test_save_omits_final_state_on_win():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        initial = _RawTableau([
+            [Card("♠", "A", face_up=True)],
+            [], [], [], [], [], [],
+        ])
+        final = _RawTableau([
+            [], [], [], [], [], [], [],
+        ])
+        gf = GameFile(path, game_id="test")
+        gf.save(
+            final,
+            initial_tableau=initial,
+            metadata={"c1_special": "A"},
+            won="true",
+            foundation_cards=52,
+        )
+        content = path.read_text()
+        assert "## Initial Deal" in content
+        assert "## Final State" not in content
+
+
+def test_load_reads_from_initial_deal_section_not_final_state():
+    # When both Initial Deal and Final State exist, load must return the
+    # Initial Deal — that's the canonical starting position.
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        initial = _RawTableau([
+            [Card("♠", "A", face_up=True)],
+            [Card("♥", "K", face_up=True)],
+            [], [], [], [], [],
+        ])
+        final = _RawTableau([
+            [], [],
+            [], [], [], [], [],
+        ])
+        gf = GameFile(path, game_id="test")
+        gf.save(
+            final,
+            initial_tableau=initial,
+            metadata={"c1_special": "A"},
+            won="false",
+            foundation_cards=2,
+        )
+        loaded = gf.load()
+        # Initial Deal had A♠ in C1 and K♥ in C2; final state was empty.
+        # Load should return Initial Deal.
+        assert len(loaded.columns[0]) == 1
+        assert loaded.columns[0][0].rank == "A"
+        assert len(loaded.columns[1]) == 1
+        assert loaded.columns[1][0].rank == "K"
+
+
+def test_load_falls_back_to_first_table_for_legacy_format():
+    # Legacy format: no `## Initial Deal` heading, just the table.
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "legacy.md"
+        path.write_text(
+            "# Game legacy\n"
+            "\n"
+            "version: 0.0.1\n"
+            "c1_special: A\n"
+            "won: unknown\n"
+            "foundation_cards: 0\n"
+            "moves: 0\n"
+            "\n"
+            "| C1 | C2 | C3 | C4 | C5 | C6 | C7 |\n"
+            "| --- | --- | --- | --- | --- | --- | --- |\n"
+            "| A♠ |  |  |  |  |  |  |\n"
+        )
+        gf = GameFile(path, game_id="legacy")
+        loaded = gf.load()
+        assert len(loaded.columns) == 7
+        assert loaded.columns[0][0].rank == "A"

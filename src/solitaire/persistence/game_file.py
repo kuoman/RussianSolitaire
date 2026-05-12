@@ -13,16 +13,28 @@ class GameFile:
         self._path = path
         self._game_id = game_id
 
-    def save(self, tableau, *, metadata=None, won="unknown", foundation_cards=0, move_log=None) -> None:
+    def save(self, tableau, *, initial_tableau=None, metadata=None, won="unknown",
+             foundation_cards=0, move_log=None) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
         if metadata is None:
             from solitaire.persistence.game_analyzer import GameAnalyzer
             metadata = GameAnalyzer(tableau).analyse()
         log = list(move_log) if move_log else []
+        initial = initial_tableau if initial_tableau is not None else tableau
+        has_final = initial_tableau is not None and won != "true"
         header_lines = self._build_header_lines(metadata, won, foundation_cards, len(log))
-        table_lines = self._build_table_lines(tableau)
+        initial_section = self._build_table_section("Initial Deal", initial)
+        final_section = self._build_table_section("Final State", tableau) if has_final else []
         moves_lines = self._build_moves_section(log)
-        self._path.write_text("\n".join(header_lines + table_lines + moves_lines) + "\n")
+        self._path.write_text(
+            "\n".join(header_lines + initial_section + final_section + moves_lines) + "\n"
+        )
+
+    def _build_table_section(self, heading, tableau) -> list:
+        lines = [f"## {heading}", ""]
+        lines.extend(self._build_table_lines(tableau))
+        lines.append("")
+        return lines
 
     def _build_header_lines(self, metadata, won, foundation_cards, moves_count) -> list:
         meta_lines = [f"{k}: {v}" for k, v in metadata.items()]
@@ -36,7 +48,7 @@ class GameFile:
     def _build_moves_section(self, move_log: list) -> list:
         if not move_log:
             return []
-        lines = ["", "## Moves"]
+        lines = ["## Moves"]
         for i, description in enumerate(move_log, start=1):
             lines.append(f"{i}. {description}")
         return lines
@@ -56,7 +68,8 @@ class GameFile:
     def load(self):
         from solitaire.core.tableau import _RawTableau
         lines = self._path.read_text().splitlines()
-        columns = self._parse_columns(lines)
+        section_lines = self._lines_for_section(lines, "Initial Deal")
+        columns = self._parse_columns(section_lines)
         prior_moves = self._parse_moves_section(lines)
         prior_metadata = self._parse_metadata(lines)
         return _RawTableau(
@@ -64,6 +77,23 @@ class GameFile:
             prior_moves=prior_moves,
             prior_metadata=prior_metadata,
         )
+
+    def _lines_for_section(self, lines: list, heading: str) -> list:
+        """Return the slice of lines belonging to `## <heading>`. Falls back to
+        the entire file (so the first table found is parsed) for legacy format."""
+        section_start = None
+        for i, line in enumerate(lines):
+            if line.strip() == f"## {heading}":
+                section_start = i + 1
+                break
+        if section_start is None:
+            return lines
+        section_end = len(lines)
+        for j in range(section_start, len(lines)):
+            if lines[j].startswith("## "):
+                section_end = j
+                break
+        return lines[section_start:section_end]
 
     def _parse_metadata(self, lines: list) -> dict:
         metadata = {}

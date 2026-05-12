@@ -18,5 +18,6 @@ class Tableau:
 
 
 class _RawTableau:
-    def __init__(self, columns: list):
+    def __init__(self, columns: list, prior_moves=None):
         self.columns = columns
+        self.prior_moves = list(prior_moves) if prior_moves else []

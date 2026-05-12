@@ -53,7 +53,8 @@ class GameFile:
         from solitaire.core.tableau import _RawTableau
         lines = self._path.read_text().splitlines()
         columns = self._parse_columns(lines)
-        return _RawTableau(columns)
+        prior_moves = self._parse_moves_section(lines)
+        return _RawTableau(columns, prior_moves=prior_moves)
 
     def _parse_columns(self, lines: list) -> list:
         data_rows = [l for l in lines if l.startswith("|") and "C1" not in l and "---" not in l]
@@ -68,3 +69,23 @@ class GameFile:
                 if cell:
                     columns[col_idx].append(Card.from_save_token(cell))
         return columns
+
+    def _parse_moves_section(self, lines: list) -> list:
+        moves = []
+        in_section = False
+        for line in lines:
+            if line.strip() == "## Moves":
+                in_section = True
+                continue
+            if not in_section:
+                continue
+            stripped = line.strip()
+            if not stripped:
+                continue
+            # Strip "N. " prefix
+            dot_idx = stripped.find(". ")
+            if dot_idx > 0 and stripped[:dot_idx].isdigit():
+                moves.append(stripped[dot_idx + 2:])
+            else:
+                moves.append(stripped)
+        return moves

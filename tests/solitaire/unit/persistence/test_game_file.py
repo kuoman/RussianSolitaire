@@ -220,3 +220,32 @@ def test_load_preserves_suit_and_rank():
             for card_orig, card_loaded in zip(col_orig, col_loaded):
                 assert card_orig.suit == card_loaded.suit
                 assert card_orig.rank == card_loaded.rank
+
+
+def test_load_returns_empty_prior_moves_when_no_section():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau)
+        loaded = gf.load()
+        assert loaded.prior_moves == []
+
+
+def test_load_parses_prior_moves_from_section():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(
+            tableau,
+            move_log=[
+                "7♥ from C2 moved to C1",
+                "A♠ from C3 moved to foundation",
+            ],
+        )
+        loaded = gf.load()
+        assert loaded.prior_moves == [
+            "7♥ from C2 moved to C1",
+            "A♠ from C3 moved to foundation",
+        ]

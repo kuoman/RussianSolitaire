@@ -148,3 +148,32 @@ def test_apply_leaves_empty_source_column_empty():
     move = Move(source_column=0, count=1, destination=ColumnDestination(1))
     game.apply(move)
     assert tableau.columns[0] == []
+
+
+def test_apply_moves_card_to_foundation():
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=FoundationDestination())
+    game.apply(move)
+    assert tableau.columns[0] == []
+    assert game.foundations.total_cards == 1
+    assert game.foundations.for_suit("♠").size == 1
+
+
+def test_apply_to_foundation_appends_to_history():
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=FoundationDestination())
+    game.apply(move)
+    assert len(game.moves) == 1
+    assert game.moves[0] is move
+
+
+def test_apply_to_foundation_auto_flips_exposed_card():
+    tableau = make_tableau([face_down("♣", "5"), face_up("♠", "A")])
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=FoundationDestination())
+    game.apply(move)
+    assert len(tableau.columns[0]) == 1
+    assert tableau.columns[0][0].face_up is True
+    assert tableau.columns[0][0].rank == "5"

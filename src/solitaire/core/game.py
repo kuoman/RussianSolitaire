@@ -38,6 +38,8 @@ class Game:
         destination = move.destination
         if destination.is_column():
             columns[destination.column_index()].extend(moving_cards)
+        elif destination.is_foundation():
+            self._foundations.add(moving_cards[0])
 
         new_source_col = columns[move.source_column]
         if new_source_col and not new_source_col[-1].face_up:

@@ -54,7 +54,8 @@ def main():
     tableau, save_target = (
         _load_tableau(args.load) if args.load else _new_tableau(args.no_save)
     )
-    game = Game(tableau)
+    prior_moves = getattr(tableau, "prior_moves", None)
+    game = Game(tableau, prior_moves=prior_moves)
     display = Display(tableau, debug=args.debug, foundations=game.foundations)
     Repl(game, display, save_target=save_target).run()
 

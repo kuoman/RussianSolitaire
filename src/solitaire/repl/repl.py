@@ -79,7 +79,7 @@ class Repl:
             self._game.tableau,
             won=self._outcome_label(),
             foundation_cards=self._game.foundations.total_cards,
-            moves=len(self._game.moves),
+            move_log=self._game.move_descriptions,
         )
 
     def _outcome_label(self) -> str:

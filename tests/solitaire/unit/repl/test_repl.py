@@ -39,13 +39,13 @@ class FakeSaveTarget:
     def __init__(self):
         self.calls = []
 
-    def save(self, tableau, *, won="unknown", foundation_cards=0, moves=0):
+    def save(self, tableau, *, won="unknown", foundation_cards=0, move_log=None):
         self.calls.append(
             {
                 "tableau": tableau,
                 "won": won,
                 "foundation_cards": foundation_cards,
-                "moves": moves,
+                "move_log": list(move_log) if move_log else [],
             }
         )
 
@@ -244,7 +244,7 @@ def test_repl_saves_on_quit_with_won_unknown():
     call = save_target.calls[0]
     assert call["won"] == "unknown"
     assert call["foundation_cards"] == 0
-    assert call["moves"] == 0
+    assert call["move_log"] == []
     assert call["tableau"] is game.tableau
 
 
@@ -263,7 +263,7 @@ def test_repl_saves_on_win_with_won_true():
     call = save_target.calls[0]
     assert call["won"] == "true"
     assert call["foundation_cards"] == 52
-    assert call["moves"] == 1
+    assert call["move_log"] == ["K♠ from C1 moved to foundation"]
 
 
 def test_repl_saves_on_loss_with_won_false():
@@ -280,7 +280,22 @@ def test_repl_saves_on_loss_with_won_false():
     call = save_target.calls[0]
     assert call["won"] == "false"
     assert call["foundation_cards"] == 0
-    assert call["moves"] == 0
+    assert call["move_log"] == []
+
+
+def test_repl_save_includes_prior_moves_in_log():
+    game = make_game(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+        [], [], [], [], [],
+    )
+    # Seed prior moves (as if loaded from disk)
+    game._prior_descriptions = ["X", "Y"]
+    save_target = FakeSaveTarget()
+    repl, _ = make_repl(game, ["1", "q"], save_target=save_target)
+    repl.run()
+    call = save_target.calls[0]
+    assert call["move_log"] == ["X", "Y", "7♥ from C2 moved to C1"]
 
 
 def test_repl_skips_save_when_save_target_is_none():

@@ -34,7 +34,7 @@ def _new_tableau(no_save: bool):
     deck.shuffle()
     tableau = Tableau(deck)
     if not no_save:
-        game_path = GameRegistry.next_game_path(date.today(), DATA_DIR)
+        game_path = GameRegistry(DATA_DIR).next_game_path(date.today())
         GameFile(game_path, game_id=game_path.stem).save(tableau)
         print(f"Game saved to {game_path}")
     return tableau

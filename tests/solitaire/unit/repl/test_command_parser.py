@@ -142,3 +142,27 @@ def test_parse_missing_moved_to_phrase_returns_error():
     parser = CommandParser(game)
     kind, msg = parser.parse("As c1 to f")
     assert kind == "error"
+
+
+def test_pure_integer_input_is_pick():
+    game = make_game([face_up("♠", "A")])
+    parser = CommandParser(game)
+    kind, n = parser.parse("3")
+    assert kind == "pick"
+    assert n == 3
+
+
+def test_pure_integer_with_whitespace_is_pick():
+    game = make_game([face_up("♠", "A")])
+    parser = CommandParser(game)
+    kind, n = parser.parse("  7  ")
+    assert kind == "pick"
+    assert n == 7
+
+
+def test_zero_is_pick_zero():
+    game = make_game([face_up("♠", "A")])
+    parser = CommandParser(game)
+    kind, n = parser.parse("0")
+    assert kind == "pick"
+    assert n == 0

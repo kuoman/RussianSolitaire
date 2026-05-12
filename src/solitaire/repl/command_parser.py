@@ -19,6 +19,8 @@ class CommandParser:
             return ("quit",)
         if lowered in ("?", "help"):
             return ("help",)
+        if stripped.isdigit():
+            return ("pick", int(stripped))
         return self._parse_move(stripped)
 
     def _parse_move(self, line: str):

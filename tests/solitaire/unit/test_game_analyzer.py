@@ -113,3 +113,44 @@ def test_analyse_returns_all_seven_keys():
     tableau = Tableau(Deck())
     result = GameAnalyzer.analyse(tableau)
     assert set(result.keys()) == {"c1_special", "c2_playable", "c3_playable", "c4_playable", "c5_playable", "c6_playable", "c7_playable"}
+
+
+def test_kings_on_home_row_is_zero_when_no_kings_are_first_face_up():
+    from solitaire.deck import Deck
+    from solitaire.tableau import Tableau
+    # Use a standard unshuffled deck — unlikely to have kings as first face-up
+    # Build a tableau where no column C2-C7 has a King as first face-up
+    tableau = make_tableau([
+        make_column(face_up("♠", "5")),
+        make_column(face_down("♦", "3"), face_up("♥", "7"), face_up("♠", "9"), face_up("♦", "J"), face_up("♣", "Q"), face_up("♠", "2")),
+        make_column(face_down("♦", "2"), face_down("♣", "4"), face_up("♠", "8"), face_up("♠", "10"), face_up("♦", "Q"), face_up("♣", "3"), face_up("♥", "2")),
+        make_column(face_down("♥", "2"), face_down("♠", "4"), face_down("♦", "6"), face_up("♣", "7"), face_up("♥", "9"), face_up("♠", "9"), face_up("♦", "10"), face_up("♣", "J")),
+        make_column(face_down("♣", "2"), face_down("♥", "4"), face_down("♠", "6"), face_down("♦", "8"), face_up("♣", "9"), face_up("♥", "10"), face_up("♠", "J"), face_up("♦", "Q"), face_up("♣", "3")),
+        make_column(face_down("♥", "3"), face_down("♦", "5"), face_down("♣", "7"), face_down("♠", "9"), face_down("♥", "J"), face_up("♦", "Q"), face_up("♣", "2"), face_up("♥", "2"), face_up("♠", "3"), face_up("♦", "4")),
+        make_column(face_down("♣", "3"), face_down("♥", "5"), face_down("♠", "7"), face_down("♦", "9"), face_down("♣", "J"), face_down("♥", "Q"), face_up("♠", "2"), face_up("♦", "2"), face_up("♣", "3"), face_up("♥", "4"), face_up("♠", "5")),
+    ])
+    result = GameAnalyzer.analyse(tableau)
+    assert result["kings_on_home_row"] == 0
+
+
+def test_kings_on_home_row_counts_kings_as_first_face_up_in_c2_to_c7():
+    # C2 and C5 have King as first face-up card
+    tableau = make_tableau([
+        make_column(face_up("♠", "5")),
+        make_column(face_down("♦", "3"), face_up("♠", "K"), face_up("♠", "9"), face_up("♦", "J"), face_up("♣", "Q"), face_up("♠", "2")),
+        make_column(face_down("♦", "2"), face_down("♣", "4"), face_up("♠", "8"), face_up("♠", "10"), face_up("♦", "Q"), face_up("♣", "3"), face_up("♥", "2")),
+        make_column(face_down("♥", "2"), face_down("♠", "4"), face_down("♦", "6"), face_up("♣", "7"), face_up("♥", "9"), face_up("♠", "9"), face_up("♦", "10"), face_up("♣", "J")),
+        make_column(face_down("♣", "2"), face_down("♥", "4"), face_down("♠", "6"), face_down("♦", "8"), face_up("♥", "K"), face_up("♥", "10"), face_up("♠", "J"), face_up("♦", "Q"), face_up("♣", "3")),
+        make_column(face_down("♥", "3"), face_down("♦", "5"), face_down("♣", "7"), face_down("♠", "9"), face_down("♥", "J"), face_up("♦", "Q"), face_up("♣", "2"), face_up("♥", "2"), face_up("♠", "3"), face_up("♦", "4")),
+        make_column(face_down("♣", "3"), face_down("♥", "5"), face_down("♠", "7"), face_down("♦", "9"), face_down("♣", "J"), face_down("♥", "Q"), face_up("♠", "2"), face_up("♦", "2"), face_up("♣", "3"), face_up("♥", "4"), face_up("♠", "5")),
+    ])
+    result = GameAnalyzer.analyse(tableau)
+    assert result["kings_on_home_row"] == 2
+
+
+def test_kings_on_home_row_is_in_analyse_result_keys():
+    from solitaire.deck import Deck
+    from solitaire.tableau import Tableau
+    tableau = Tableau(Deck())
+    result = GameAnalyzer.analyse(tableau)
+    assert "kings_on_home_row" in result

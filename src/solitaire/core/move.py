@@ -1,3 +1,6 @@
+from solitaire.core.card import RANKS
+
+
 class Move:
     def __init__(self, source_column: int, count: int, destination):
         self._source_column = source_column
@@ -36,6 +39,29 @@ class Move:
         source_card = source_col[len(source_col) - self._count]
         if not source_card.face_up:
             return False
+
+        # 5. destination-specific validation
+        if self._destination.is_column():
+            dest_idx = self._destination.column_index()
+            # cannot move to the same column
+            if dest_idx == self._source_column:
+                return False
+            # destination index must exist
+            if dest_idx < 0 or dest_idx >= len(columns):
+                return False
+            dest_col = columns[dest_idx]
+            # empty column: only kings allowed
+            if not dest_col:
+                return source_card.rank == "K"
+            # non-empty: same suit, one rank lower than dest top
+            dest_top = dest_col[-1]
+            if not dest_top.face_up:
+                return False
+            if source_card.suit != dest_top.suit:
+                return False
+            source_rank_idx = RANKS.index(source_card.rank)
+            dest_rank_idx = RANKS.index(dest_top.rank)
+            return dest_rank_idx == source_rank_idx + 1
 
         return False
 

@@ -30,7 +30,7 @@ def test_c1_special_is_A_when_c1_is_ace():
         make_column(face_down("♥", "3"), face_down("♦", "5"), face_down("♣", "7"), face_down("♠", "9"), face_down("♥", "J"), face_up("♦", "Q"), face_up("♣", "K"), face_up("♥", "2"), face_up("♠", "3"), face_up("♦", "4")),
         make_column(face_down("♣", "3"), face_down("♥", "5"), face_down("♠", "7"), face_down("♦", "9"), face_down("♣", "J"), face_down("♥", "Q"), face_up("♠", "K"), face_up("♦", "2"), face_up("♣", "3"), face_up("♥", "4"), face_up("♠", "5")),
     ])
-    result = GameAnalyzer.analyse(tableau)
+    result = GameAnalyzer(tableau).analyse()
     assert result["c1_special"] == "A"
 
 
@@ -44,7 +44,7 @@ def test_c1_special_is_K_when_c1_is_king():
         make_column(face_down("♥", "3"), face_down("♦", "5"), face_down("♣", "7"), face_down("♠", "9"), face_down("♥", "J"), face_up("♦", "Q"), face_up("♣", "K"), face_up("♥", "2"), face_up("♠", "3"), face_up("♦", "4")),
         make_column(face_down("♣", "3"), face_down("♥", "5"), face_down("♠", "7"), face_down("♦", "9"), face_down("♣", "J"), face_down("♥", "Q"), face_up("♠", "K"), face_up("♦", "2"), face_up("♣", "3"), face_up("♥", "4"), face_up("♠", "5")),
     ])
-    result = GameAnalyzer.analyse(tableau)
+    result = GameAnalyzer(tableau).analyse()
     assert result["c1_special"] == "K"
 
 
@@ -58,7 +58,7 @@ def test_c1_special_is_none_when_c1_is_not_ace_or_king():
         make_column(face_down("♥", "3"), face_down("♦", "5"), face_down("♣", "7"), face_down("♠", "9"), face_down("♥", "J"), face_up("♦", "Q"), face_up("♣", "K"), face_up("♥", "2"), face_up("♠", "3"), face_up("♦", "4")),
         make_column(face_down("♣", "3"), face_down("♥", "5"), face_down("♠", "7"), face_down("♦", "9"), face_down("♣", "J"), face_down("♥", "Q"), face_up("♠", "K"), face_up("♦", "2"), face_up("♣", "3"), face_up("♥", "4"), face_up("♠", "5")),
     ])
-    result = GameAnalyzer.analyse(tableau)
+    result = GameAnalyzer(tableau).analyse()
     assert result["c1_special"] == "none"
 
 
@@ -73,7 +73,7 @@ def test_column_is_playable_when_higher_same_suit_exists():
         make_column(face_down("♥", "3"), face_down("♦", "5"), face_down("♣", "7"), face_down("♠", "9"), face_down("♥", "J"), face_up("♦", "Q"), face_up("♣", "K"), face_up("♥", "2"), face_up("♠", "3"), face_up("♦", "4")),
         make_column(face_down("♣", "3"), face_down("♥", "5"), face_down("♠", "7"), face_down("♦", "9"), face_down("♣", "J"), face_down("♥", "Q"), face_up("♠", "K"), face_up("♦", "2"), face_up("♣", "3"), face_up("♥", "4"), face_up("♠", "5")),
     ])
-    result = GameAnalyzer.analyse(tableau)
+    result = GameAnalyzer(tableau).analyse()
     assert result["c2_playable"] == "true"
 
 
@@ -88,7 +88,7 @@ def test_column_is_not_playable_when_higher_same_suit_missing():
         make_column(face_down("♥", "3"), face_down("♦", "5"), face_down("♣", "7"), face_down("♠", "9"), face_down("♥", "J"), face_up("♦", "Q"), face_up("♣", "K"), face_up("♥", "2"), face_up("♠", "3"), face_up("♦", "4")),
         make_column(face_down("♣", "3"), face_down("♥", "5"), face_down("♠", "7"), face_down("♦", "9"), face_down("♣", "J"), face_down("♥", "Q"), face_up("♠", "K"), face_up("♦", "2"), face_up("♣", "3"), face_up("♥", "4"), face_up("♠", "5")),
     ])
-    result = GameAnalyzer.analyse(tableau)
+    result = GameAnalyzer(tableau).analyse()
     assert result["c2_playable"] == "false"
 
 
@@ -103,7 +103,7 @@ def test_king_first_face_up_is_not_playable():
         make_column(face_down("♥", "3"), face_down("♦", "5"), face_down("♣", "7"), face_down("♠", "9"), face_down("♥", "J"), face_up("♦", "Q"), face_up("♣", "K"), face_up("♥", "2"), face_up("♠", "3"), face_up("♦", "4")),
         make_column(face_down("♣", "3"), face_down("♥", "5"), face_down("♠", "7"), face_down("♦", "9"), face_down("♣", "J"), face_down("♥", "Q"), face_up("♥", "A"), face_up("♦", "2"), face_up("♣", "3"), face_up("♥", "4"), face_up("♠", "5")),
     ])
-    result = GameAnalyzer.analyse(tableau)
+    result = GameAnalyzer(tableau).analyse()
     assert result["c2_playable"] == "false"
 
 
@@ -111,7 +111,7 @@ def test_analyse_returns_all_expected_keys():
     from solitaire.core.deck import Deck
     from solitaire.core.tableau import Tableau
     tableau = Tableau(Deck())
-    result = GameAnalyzer.analyse(tableau)
+    result = GameAnalyzer(tableau).analyse()
     assert set(result.keys()) == {"c1_special", "c2_playable", "c3_playable", "c4_playable", "c5_playable", "c6_playable", "c7_playable", "kings_on_home_row"}
 
 
@@ -129,7 +129,7 @@ def test_kings_on_home_row_is_zero_when_no_kings_are_first_face_up():
         make_column(face_down("♥", "3"), face_down("♦", "5"), face_down("♣", "7"), face_down("♠", "9"), face_down("♥", "J"), face_up("♦", "Q"), face_up("♣", "2"), face_up("♥", "2"), face_up("♠", "3"), face_up("♦", "4")),
         make_column(face_down("♣", "3"), face_down("♥", "5"), face_down("♠", "7"), face_down("♦", "9"), face_down("♣", "J"), face_down("♥", "Q"), face_up("♠", "2"), face_up("♦", "2"), face_up("♣", "3"), face_up("♥", "4"), face_up("♠", "5")),
     ])
-    result = GameAnalyzer.analyse(tableau)
+    result = GameAnalyzer(tableau).analyse()
     assert result["kings_on_home_row"] == 0
 
 
@@ -144,7 +144,7 @@ def test_kings_on_home_row_counts_kings_as_first_face_up_in_c2_to_c7():
         make_column(face_down("♥", "3"), face_down("♦", "5"), face_down("♣", "7"), face_down("♠", "9"), face_down("♥", "J"), face_up("♦", "Q"), face_up("♣", "2"), face_up("♥", "2"), face_up("♠", "3"), face_up("♦", "4")),
         make_column(face_down("♣", "3"), face_down("♥", "5"), face_down("♠", "7"), face_down("♦", "9"), face_down("♣", "J"), face_down("♥", "Q"), face_up("♠", "2"), face_up("♦", "2"), face_up("♣", "3"), face_up("♥", "4"), face_up("♠", "5")),
     ])
-    result = GameAnalyzer.analyse(tableau)
+    result = GameAnalyzer(tableau).analyse()
     assert result["kings_on_home_row"] == 2
 
 
@@ -152,5 +152,5 @@ def test_kings_on_home_row_is_in_analyse_result_keys():
     from solitaire.core.deck import Deck
     from solitaire.core.tableau import Tableau
     tableau = Tableau(Deck())
-    result = GameAnalyzer.analyse(tableau)
+    result = GameAnalyzer(tableau).analyse()
     assert "kings_on_home_row" in result

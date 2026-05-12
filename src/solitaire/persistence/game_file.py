@@ -18,7 +18,7 @@ class GameFile:
 
     def _build_header_lines(self, tableau, won, foundation_cards, moves) -> list:
         from solitaire.persistence.game_analyzer import GameAnalyzer
-        metadata = GameAnalyzer.analyse(tableau)
+        metadata = GameAnalyzer(tableau).analyse()
         meta_lines = [f"{k}: {v}" for k, v in metadata.items()]
         outcome_lines = [
             f"won: {won}",

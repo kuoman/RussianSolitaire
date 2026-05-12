@@ -40,3 +40,19 @@ def test_foundation_destinations_are_equal():
 
 def test_destinations_of_different_types_are_not_equal():
     assert ColumnDestination(3) != FoundationDestination()
+
+
+def test_move_remembers_source_column():
+    move = Move(source_column=2, count=3, destination=ColumnDestination(5))
+    assert move.source_column == 2
+
+
+def test_move_remembers_count():
+    move = Move(source_column=2, count=3, destination=ColumnDestination(5))
+    assert move.count == 3
+
+
+def test_move_remembers_destination():
+    dest = ColumnDestination(5)
+    move = Move(source_column=2, count=3, destination=dest)
+    assert move.destination == dest

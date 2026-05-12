@@ -1,5 +1,20 @@
 class Move:
-    pass
+    def __init__(self, source_column: int, count: int, destination):
+        self._source_column = source_column
+        self._count = count
+        self._destination = destination
+
+    @property
+    def source_column(self) -> int:
+        return self._source_column
+
+    @property
+    def count(self) -> int:
+        return self._count
+
+    @property
+    def destination(self):
+        return self._destination
 
 
 class ColumnDestination:

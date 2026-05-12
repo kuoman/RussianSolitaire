@@ -1,5 +1,4 @@
 from solitaire.core.move import Move, ColumnDestination, FoundationDestination
-from solitaire.core.tableau import COLUMN_SIZES
 
 
 class MoveGenerator:
@@ -8,7 +7,7 @@ class MoveGenerator:
         result = []
         tableau = game.tableau
         foundations = game.foundations
-        n_cols = len(COLUMN_SIZES)
+        n_cols = len(tableau.columns)
 
         for src_idx in range(n_cols):
             col = tableau.columns[src_idx]

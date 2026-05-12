@@ -6,6 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+from solitaire.autoplay.autoplayer import Autoplayer
 from solitaire.core.deck import Deck
 from solitaire.core.game import Game
 from solitaire.core.tableau import Tableau
@@ -15,6 +16,8 @@ from solitaire.persistence.game_file import GameFile
 from solitaire.repl.repl import Repl
 
 DATA_DIR = Path(__file__).parent.parent / "data"
+
+OUTCOME_WORD = {"true": "won", "false": "lost", "aborted": "aborted (cap hit)"}
 
 
 def _load_tableau(path_str: str):
@@ -44,11 +47,27 @@ def _new_tableau(no_save: bool):
     return tableau, save_target
 
 
+def _run_autoplay(game, save_target):
+    outcome = Autoplayer(game).play()
+    if save_target is not None:
+        save_target.save(
+            game.tableau,
+            won=outcome,
+            foundation_cards=game.foundations.total_cards,
+            move_log=game.move_descriptions,
+        )
+    print(
+        f"Result: {OUTCOME_WORD[outcome]} after {game.total_moves} moves "
+        f"({game.foundations.total_cards} cards on foundations)"
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Yukon Russian Solitaire")
     parser.add_argument("--debug", action="store_true", help="Reveal face-down cards")
     parser.add_argument("--no-save", action="store_true", help="Do not save game to file")
     parser.add_argument("--load", metavar="PATH", help="Load a saved game file")
+    parser.add_argument("--autoplay", action="store_true", help="Autoplay until win or stuck")
     args = parser.parse_args()
 
     tableau, save_target = (
@@ -56,6 +75,11 @@ def main():
     )
     prior_moves = getattr(tableau, "prior_moves", None)
     game = Game(tableau, prior_moves=prior_moves)
+
+    if args.autoplay:
+        _run_autoplay(game, save_target)
+        return
+
     display = Display(tableau, debug=args.debug, foundations=game.foundations)
     Repl(game, display, save_target=save_target).run()
 

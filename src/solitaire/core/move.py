@@ -63,6 +63,15 @@ class Move:
             dest_rank_idx = RANKS.index(dest_top.rank)
             return dest_rank_idx == source_rank_idx + 1
 
+        # foundation destination
+        if self._destination.is_foundation():
+            if self._count != 1:
+                return False
+            # source card must be the deepest card (last in column)
+            if source_card is not source_col[-1]:
+                return False
+            return foundations.can_accept(source_card)
+
         return False
 
 

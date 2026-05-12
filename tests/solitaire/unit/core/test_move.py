@@ -196,3 +196,48 @@ def test_move_to_column_out_of_range_is_illegal():
     foundations = Foundations()
     move = Move(source_column=0, count=1, destination=ColumnDestination(99))
     assert move.is_legal_on(tableau, foundations) is False
+
+
+def test_move_ace_to_empty_foundation_is_legal():
+    tableau = make_tableau([face_up("♠", "A")])
+    foundations = Foundations()
+    move = Move(source_column=0, count=1, destination=FoundationDestination())
+    assert move.is_legal_on(tableau, foundations) is True
+
+
+def test_move_non_ace_to_empty_foundation_is_illegal():
+    tableau = make_tableau([face_up("♠", "5")])
+    foundations = Foundations()
+    move = Move(source_column=0, count=1, destination=FoundationDestination())
+    assert move.is_legal_on(tableau, foundations) is False
+
+
+def test_move_two_to_foundation_with_ace_is_legal():
+    tableau = make_tableau([face_up("♠", "2")])
+    foundations = Foundations()
+    foundations.add(face_up("♠", "A"))
+    move = Move(source_column=0, count=1, destination=FoundationDestination())
+    assert move.is_legal_on(tableau, foundations) is True
+
+
+def test_move_to_foundation_with_count_greater_than_one_is_illegal():
+    # Only single cards go to foundation
+    tableau = make_tableau(
+        [face_up("♠", "A"), face_up("♠", "2")],
+    )
+    foundations = Foundations()
+    move = Move(source_column=0, count=2, destination=FoundationDestination())
+    assert move.is_legal_on(tableau, foundations) is False
+
+
+def test_move_to_foundation_must_use_deepest_card():
+    # Source column ends in ...8♥, A♠. Move count=1 takes the A♠ — that's legal.
+    # But if we tried count=1 from a non-bottom card it shouldn't be possible to address
+    # since source card is always determined by count from the bottom.
+    # This test confirms: count=1 always picks the deepest card.
+    tableau = make_tableau(
+        [face_up("♥", "8"), face_up("♠", "A")],
+    )
+    foundations = Foundations()
+    move = Move(source_column=0, count=1, destination=FoundationDestination())
+    assert move.is_legal_on(tableau, foundations) is True

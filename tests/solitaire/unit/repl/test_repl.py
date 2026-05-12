@@ -51,10 +51,14 @@ def test_repl_applies_legal_move():
 
 
 def test_repl_rejects_illegal_move_with_message():
+    # Includes an Ace in C3 so MoveGenerator finds at least one legal move
+    # (A♠ -> foundation), which prevents auto-exit-on-no-legal-moves and lets
+    # the test verify the illegal-move rejection path.
     game = make_game(
         [face_up("♥", "9")],
         [face_up("♥", "7")],
-        [], [], [], [], [],
+        [face_up("♠", "A")],
+        [], [], [], [],
     )
     repl, captured = make_repl(game, ["7h c2 moved to c1", "q"])
     repl.run()
@@ -149,6 +153,22 @@ def test_repl_no_legal_moves_message():
     repl.run()
     rendered = "\n".join(captured)
     assert "no legal moves" in rendered.lower() or "no available" in rendered.lower()
+
+
+def test_repl_exits_loop_when_no_legal_moves():
+    # Stranded cards. The Repl should print loss message and exit
+    # WITHOUT needing input from the player.
+    game = make_game(
+        [face_up("♠", "5")],
+        [face_up("♥", "9")],
+        [], [], [], [], [],
+    )
+    # No inputs queued — if the repl tries to read input, the test will raise
+    # StopIteration (because make_repl uses an iter() over the inputs list).
+    repl, captured = make_repl(game, [])
+    repl.run()  # Should NOT raise — should detect loss and return
+    rendered = "\n".join(captured)
+    assert "game over" in rendered.lower() or "no legal moves" in rendered.lower()
 
 
 def test_repl_filters_out_column_move_when_foundation_move_available():

@@ -30,6 +30,9 @@ class Repl:
                 return
 
             self._current_moves = self._visible_moves(MoveGenerator(self._game).legal_moves())
+            if not self._current_moves:
+                self._output("No legal moves remain. Game over.")
+                return
             self._output(self._format_move_list(self._current_moves))
 
             try:

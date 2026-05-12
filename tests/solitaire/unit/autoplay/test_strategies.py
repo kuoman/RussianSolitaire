@@ -55,6 +55,64 @@ def test_nply_rejects_zero_depth():
         NplyStrategy(depth=0)
 
 
+def test_non_blocking_does_not_cycle_forever():
+    # Setup: A♠ alone on C1, foundations empty. Only legal move: A♠ → foundation.
+    # After applying, no legal moves. Outcome should be "false" (lost — game ended,
+    # not "aborted" — cap hit).
+    from solitaire.autoplay.autoplayer import Autoplayer
+
+    tableau = _RawTableau([
+        [Card("♠", "A", face_up=True)],
+        [], [], [], [], [], [],
+    ])
+    game = Game(tableau)
+    outcome = Autoplayer(game, strategy=NonBlockingStrategy(), max_moves=100).play()
+    assert outcome == "false"
+    assert game.foundations.for_suit("♠").size == 1
+
+
+def test_non_blocking_makes_progress_with_multiple_aces():
+    # Aces in C1, C2, C3, C4. All can go to foundation (4 separate moves).
+    # Strategy should play all four without cycling.
+    from solitaire.autoplay.autoplayer import Autoplayer
+
+    tableau = _RawTableau([
+        [Card("♠", "A", face_up=True)],
+        [Card("♥", "A", face_up=True)],
+        [Card("♦", "A", face_up=True)],
+        [Card("♣", "A", face_up=True)],
+        [], [], [],
+    ])
+    game = Game(tableau)
+    outcome = Autoplayer(game, strategy=NonBlockingStrategy(), max_moves=100).play()
+    assert game.foundations.total_cards == 4
+    assert outcome == "false"
+
+
+def test_non_blocking_prefers_foundation_when_future_counts_tie():
+    # Setup: K♥ in C1, A♠ in C2, C3..C7 empty.
+    # Visible moves: K♥ to each of C3..C7 (5 column moves), and A♠ → foundation.
+    # All six moves yield the same future-move count (6), so without the
+    # foundation bonus the first move (a K♥ shuffle) would win the tie.
+    # The bonus tips the scales toward the foundation move.
+    game = make_game(
+        [face_up("♥", "K")],
+        [face_up("♠", "A")],
+        [], [], [], [], [],
+    )
+    visible = [
+        Move(0, 1, ColumnDestination(2)),
+        Move(0, 1, ColumnDestination(3)),
+        Move(0, 1, ColumnDestination(4)),
+        Move(0, 1, ColumnDestination(5)),
+        Move(0, 1, ColumnDestination(6)),
+        Move(1, 1, FoundationDestination()),
+    ]
+    chosen = NonBlockingStrategy().select(game, visible)
+    assert chosen.destination.is_foundation()
+    assert chosen.source_column == 1
+
+
 def test_nply_picks_winning_move_at_depth_1():
     # Setup: K♠ in C1, all other 51 cards on foundations. Picking the foundation
     # move wins. Even at depth=1 the strategy should pick it.

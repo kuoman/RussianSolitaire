@@ -7,10 +7,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from solitaire.core.deck import Deck
+from solitaire.core.game import Game
 from solitaire.core.tableau import Tableau
 from solitaire.display import Display
 from solitaire.persistence.game_registry import GameRegistry
 from solitaire.persistence.game_file import GameFile
+from solitaire.repl.repl import Repl
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 
@@ -46,7 +48,9 @@ def main():
     args = parser.parse_args()
 
     tableau = _load_tableau(args.load) if args.load else _new_tableau(args.no_save)
-    print(Display(tableau, debug=args.debug).render())
+    game = Game(tableau)
+    display = Display(tableau, debug=args.debug)
+    Repl(game, display).run()
 
 
 if __name__ == "__main__":

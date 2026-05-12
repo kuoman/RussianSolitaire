@@ -278,6 +278,33 @@ def test_snapshot_captures_foundations_state():
     assert game.foundations.total_cards == 0
 
 
+def test_game_stores_metadata():
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau, metadata={"c1_special": "A"})
+    assert game.metadata == {"c1_special": "A"}
+
+
+def test_game_metadata_defaults_empty():
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau)
+    assert game.metadata == {}
+
+
+def test_game_metadata_is_defensive_copy_on_input():
+    tableau = make_tableau([face_up("♠", "A")])
+    original = {"c1_special": "A"}
+    game = Game(tableau, metadata=original)
+    original["c1_special"] = "K"  # mutating input must not affect the game
+    assert game.metadata == {"c1_special": "A"}
+
+
+def test_game_metadata_is_defensive_copy_on_output():
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau, metadata={"c1_special": "A"})
+    game.metadata["c1_special"] = "K"  # mutating output must not affect the game
+    assert game.metadata == {"c1_special": "A"}
+
+
 def test_snapshot_captures_move_descriptions():
     tableau = make_tableau(
         [face_up("♥", "8")],

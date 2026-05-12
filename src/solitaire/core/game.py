@@ -3,16 +3,21 @@ from solitaire.core.foundations import Foundations
 
 
 class Game:
-    def __init__(self, tableau, foundations=None, prior_moves=None):
+    def __init__(self, tableau, foundations=None, prior_moves=None, metadata=None):
         self._tableau = tableau
         self._foundations = foundations if foundations is not None else Foundations()
         self._moves = []
         self._session_descriptions = []
         self._prior_descriptions = list(prior_moves) if prior_moves else []
+        self._metadata = dict(metadata) if metadata else {}
 
     @property
     def tableau(self):
         return self._tableau
+
+    @property
+    def metadata(self) -> dict:
+        return dict(self._metadata)
 
     @property
     def foundations(self):

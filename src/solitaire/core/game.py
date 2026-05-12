@@ -1,10 +1,12 @@
 from solitaire.core.card import Card
 from solitaire.core.foundations import Foundations
+from solitaire.core.tableau import _RawTableau
 
 
 class Game:
     def __init__(self, tableau, foundations=None, prior_moves=None, metadata=None):
         self._tableau = tableau
+        self._initial_columns = [list(col) for col in tableau.columns]
         self._foundations = foundations if foundations is not None else Foundations()
         self._moves = []
         self._session_descriptions = []
@@ -14,6 +16,10 @@ class Game:
     @property
     def tableau(self):
         return self._tableau
+
+    @property
+    def initial_tableau(self):
+        return _RawTableau([list(col) for col in self._initial_columns])
 
     @property
     def metadata(self) -> dict:

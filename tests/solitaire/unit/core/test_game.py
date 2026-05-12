@@ -305,6 +305,43 @@ def test_game_metadata_is_defensive_copy_on_output():
     assert game.metadata == {"c1_special": "A"}
 
 
+def test_game_exposes_initial_tableau_at_construction():
+    tableau = make_tableau(
+        [face_up("♠", "A")],
+        [face_up("♥", "K")],
+    )
+    game = Game(tableau)
+    initial = game.initial_tableau
+    assert len(initial.columns) == 2
+    assert initial.columns[0][0].rank == "A"
+    assert initial.columns[1][0].rank == "K"
+
+
+def test_initial_tableau_preserved_after_apply():
+    tableau = make_tableau(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=1, count=1, destination=ColumnDestination(0))
+    game.apply(move)
+    initial = game.initial_tableau
+    # Original deal: C1 has 8♥, C2 has 7♥
+    assert len(initial.columns[0]) == 1
+    assert initial.columns[0][0].rank == "8"
+    assert len(initial.columns[1]) == 1
+    assert initial.columns[1][0].rank == "7"
+
+
+def test_initial_tableau_is_independent_of_current_tableau():
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau)
+    initial = game.initial_tableau
+    # Mutating the returned tableau should not affect game state
+    initial.columns[0].append(face_up("♠", "K"))
+    assert len(game.initial_tableau.columns[0]) == 1
+
+
 def test_snapshot_captures_move_descriptions():
     tableau = make_tableau(
         [face_up("♥", "8")],

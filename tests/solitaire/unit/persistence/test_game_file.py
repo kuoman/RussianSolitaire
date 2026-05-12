@@ -2,6 +2,7 @@
 import tempfile
 from pathlib import Path
 from solitaire.core.card import Card
+from solitaire.core.tableau import _RawTableau
 from solitaire.persistence.game_file import GameFile
 
 def make_minimal_tableau():
@@ -9,6 +10,53 @@ def make_minimal_tableau():
     from solitaire.core.tableau import Tableau
     deck = Deck()
     return Tableau(deck)
+
+
+def test_save_with_empty_c1_does_not_crash_when_metadata_provided():
+    # Reproduces the --runs crash: post-play tableau has empty C1, but we have
+    # the original deal metadata to use.
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = _RawTableau([
+            [],  # C1 empty (post-play state)
+            [Card("♥", "8", face_up=True)],
+            [Card("♥", "7", face_up=True)],
+            [], [], [], [],
+        ])
+        deal_metadata = {
+            "c1_special": "A",
+            "c2_playable": "false",
+            "c3_playable": "true",
+            "c4_playable": "false",
+            "c5_playable": "false",
+            "c6_playable": "false",
+            "c7_playable": "false",
+            "kings_on_home_row": 0,
+        }
+        gf = GameFile(path, game_id="test")
+        # Should NOT crash
+        gf.save(
+            tableau,
+            metadata=deal_metadata,
+            won="false",
+            foundation_cards=1,
+            move_log=["A♠ from C1 moved to foundation"],
+        )
+        content = path.read_text()
+        assert "c1_special: A" in content
+        assert "won: false" in content
+        assert "foundation_cards: 1" in content
+
+
+def test_save_without_metadata_runs_analyzer_for_initial_deal():
+    # When metadata is not provided, GameFile runs the analyzer (existing behaviour).
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau)  # no metadata
+        content = path.read_text()
+        assert "c1_special" in content
 
 def test_saved_file_contains_game_header():
     with tempfile.TemporaryDirectory() as tmp:

@@ -10,17 +10,18 @@ class GameFile:
         self._path = path
         self._game_id = game_id
 
-    def save(self, tableau, *, won="unknown", foundation_cards=0, move_log=None) -> None:
+    def save(self, tableau, *, metadata=None, won="unknown", foundation_cards=0, move_log=None) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
+        if metadata is None:
+            from solitaire.persistence.game_analyzer import GameAnalyzer
+            metadata = GameAnalyzer(tableau).analyse()
         log = list(move_log) if move_log else []
-        header_lines = self._build_header_lines(tableau, won, foundation_cards, len(log))
+        header_lines = self._build_header_lines(metadata, won, foundation_cards, len(log))
         table_lines = self._build_table_lines(tableau)
         moves_lines = self._build_moves_section(log)
         self._path.write_text("\n".join(header_lines + table_lines + moves_lines) + "\n")
 
-    def _build_header_lines(self, tableau, won, foundation_cards, moves_count) -> list:
-        from solitaire.persistence.game_analyzer import GameAnalyzer
-        metadata = GameAnalyzer(tableau).analyse()
+    def _build_header_lines(self, metadata, won, foundation_cards, moves_count) -> list:
         meta_lines = [f"{k}: {v}" for k, v in metadata.items()]
         outcome_lines = [
             f"won: {won}",

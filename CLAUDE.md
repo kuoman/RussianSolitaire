@@ -145,6 +145,8 @@ User-facing details (display layout, command syntax, suit letters) live in
 - `nply --depth N` — minimax-style N-ply search; leaf evaluation is
   `foundation_cards + 0.1 * face_up_cards`.
 - `random` — picks uniformly at random from the visible legal moves each turn.
+- `reveal-first` — heavy bonus (+100) for moves that flip a face-down card,
+  small bonus (+1.5) for foundation moves; future-move count breaks ties.
 
 `Autoplayer` aborts after `max_moves=10000` to prevent runaway loops; the
 outcome is one of `"true"` (won), `"false"` (no legal moves), `"aborted"`.

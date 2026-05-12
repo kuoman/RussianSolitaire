@@ -104,6 +104,7 @@ or hits a 10 000-move safety cap.
 | `non-blocking` | One-move lookahead; pick the move that leaves the most legal follow-ups (foundation moves get a small bonus) |
 | `nply --depth N` | N-ply minimax; leaf evaluation is `foundation_cards + 0.1 * face_up_cards` |
 | `random` | Pick uniformly at random from the visible legal moves each turn |
+| `reveal-first` | Heavy bonus (+100) for moves that flip a face-down card, small bonus (+1.5) for foundation moves; future-move count breaks ties |
 
 When autoplay finishes the program prints e.g.
 `Result: won after 142 moves (52 cards on foundations)` and saves the result

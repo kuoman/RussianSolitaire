@@ -70,16 +70,14 @@ class GameFile:
 
     def load(self):
         from solitaire.core.tableau import _RawTableau
+        from solitaire.persistence.loaded_game import LoadedGame
         lines = self._path.read_text().splitlines()
         section_lines = self._lines_for_section(lines, "Initial Deal")
         columns = self._parse_columns(section_lines)
         prior_moves = self._parse_moves_section(lines)
         prior_metadata = self._parse_metadata(lines)
-        return _RawTableau(
-            columns,
-            prior_moves=prior_moves,
-            prior_metadata=prior_metadata,
-        )
+        tableau = _RawTableau(columns)
+        return LoadedGame(tableau, prior_moves=prior_moves, prior_metadata=prior_metadata)
 
     def _lines_for_section(self, lines: list, heading: str) -> list:
         """Return the slice of lines belonging to `## <heading>`. Falls back to

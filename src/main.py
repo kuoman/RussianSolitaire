@@ -29,16 +29,15 @@ OUTCOME_WORD = {"true": "won", "false": "lost", "aborted": "aborted (cap hit)"}
 def _load_tableau(path_str: str):
     path = Path(path_str)
     try:
-        tableau = GameFile(path, game_id=path.stem).load()
+        save_target = GameFile(path, game_id=path.stem)
+        loaded = save_target.load()
+        return loaded.tableau, save_target, loaded.prior_metadata, loaded.prior_moves
     except FileNotFoundError:
         print(f"Error: save file not found: {path_str}", file=sys.stderr)
         sys.exit(1)
     except ValueError as e:
         print(f"Error: malformed save file: {e}", file=sys.stderr)
         sys.exit(1)
-    save_target = GameFile(path, game_id=path.stem)
-    metadata = getattr(tableau, "prior_metadata", {})
-    return tableau, save_target, metadata
 
 
 def _new_tableau(no_save: bool, strategy_label: str = "human"):
@@ -182,10 +181,11 @@ def main():
         return
 
     strategy_label = _strategy_label(args)
-    tableau, save_target, metadata = (
-        _load_tableau(args.load) if args.load else _new_tableau(args.no_save, strategy_label)
-    )
-    prior_moves = getattr(tableau, "prior_moves", None)
+    if args.load:
+        tableau, save_target, metadata, prior_moves = _load_tableau(args.load)
+    else:
+        tableau, save_target, metadata = _new_tableau(args.no_save, strategy_label)
+        prior_moves = []
     game = Game(tableau, prior_moves=prior_moves, metadata=metadata)
 
     if args.autoplay:

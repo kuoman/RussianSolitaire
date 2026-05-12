@@ -233,7 +233,7 @@ def test_load_returns_seven_columns():
         gf = GameFile(path, game_id="2026-05-11-000001")
         gf.save(original)
         loaded = gf.load()
-        assert len(loaded.columns) == 7
+        assert len(loaded.tableau.columns) == 7
 
 def test_load_preserves_column_card_counts():
     with tempfile.TemporaryDirectory() as tmp:
@@ -244,7 +244,7 @@ def test_load_preserves_column_card_counts():
         loaded = gf.load()
         expected_sizes = [1, 6, 7, 8, 9, 10, 11]
         for i, size in enumerate(expected_sizes):
-            assert len(loaded.columns[i]) == size
+            assert len(loaded.tableau.columns[i]) == size
 
 def test_load_preserves_face_up_state():
     with tempfile.TemporaryDirectory() as tmp:
@@ -253,7 +253,7 @@ def test_load_preserves_face_up_state():
         gf = GameFile(path, game_id="2026-05-11-000001")
         gf.save(original)
         loaded = gf.load()
-        for col_orig, col_loaded in zip(original.columns, loaded.columns):
+        for col_orig, col_loaded in zip(original.columns, loaded.tableau.columns):
             for card_orig, card_loaded in zip(col_orig, col_loaded):
                 assert card_orig.face_up == card_loaded.face_up
 
@@ -264,7 +264,7 @@ def test_load_preserves_suit_and_rank():
         gf = GameFile(path, game_id="2026-05-11-000001")
         gf.save(original)
         loaded = gf.load()
-        for col_orig, col_loaded in zip(original.columns, loaded.columns):
+        for col_orig, col_loaded in zip(original.columns, loaded.tableau.columns):
             for card_orig, card_loaded in zip(col_orig, col_loaded):
                 assert card_orig.suit == card_loaded.suit
                 assert card_orig.rank == card_loaded.rank
@@ -323,12 +323,6 @@ def test_load_metadata_excludes_outcome_keys():
         assert "foundation_cards" not in loaded.prior_metadata
         assert "moves" not in loaded.prior_metadata
         assert "version" not in loaded.prior_metadata
-
-
-def test_load_returns_empty_metadata_dict_by_default_on_raw_tableau():
-    # _RawTableau alone (with no metadata) should expose an empty dict, not None.
-    raw = _RawTableau([[], [], [], [], [], [], []])
-    assert raw.prior_metadata == {}
 
 
 def test_load_metadata_converts_kings_on_home_row_to_int():
@@ -434,10 +428,10 @@ def test_load_reads_from_initial_deal_section_not_final_state():
         loaded = gf.load()
         # Initial Deal had A♠ in C1 and K♥ in C2; final state was empty.
         # Load should return Initial Deal.
-        assert len(loaded.columns[0]) == 1
-        assert loaded.columns[0][0].rank == "A"
-        assert len(loaded.columns[1]) == 1
-        assert loaded.columns[1][0].rank == "K"
+        assert len(loaded.tableau.columns[0]) == 1
+        assert loaded.tableau.columns[0][0].rank == "A"
+        assert len(loaded.tableau.columns[1]) == 1
+        assert loaded.tableau.columns[1][0].rank == "K"
 
 
 def test_save_writes_strategy_field():
@@ -489,5 +483,5 @@ def test_load_falls_back_to_first_table_for_legacy_format():
         )
         gf = GameFile(path, game_id="legacy")
         loaded = gf.load()
-        assert len(loaded.columns) == 7
-        assert loaded.columns[0][0].rank == "A"
+        assert len(loaded.tableau.columns) == 7
+        assert loaded.tableau.columns[0][0].rank == "A"

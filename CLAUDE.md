@@ -64,7 +64,7 @@ Python implementation of Russian Solitaire card game.
 │       │   └── command_parser.py  # `<card> <source> moved to <dest>` and pick
 │       └── autoplay/              # Headless play
 │           ├── autoplayer.py      # Drive game until win / stuck / cap
-│           └── strategies/        # first_move, non_blocking, nply
+│           └── strategies/        # first_move, non_blocking, nply, random_strategy
 └── tests/solitaire/
     ├── unit/                      # AI-editable, fluent style
     ├── characterization/          # PROTECTED — do not modify without permission
@@ -144,6 +144,7 @@ User-facing details (display layout, command syntax, suit letters) live in
   bonus).
 - `nply --depth N` — minimax-style N-ply search; leaf evaluation is
   `foundation_cards + 0.1 * face_up_cards`.
+- `random` — picks uniformly at random from the visible legal moves each turn.
 
 `Autoplayer` aborts after `max_moves=10000` to prevent runaway loops; the
 outcome is one of `"true"` (won), `"false"` (no legal moves), `"aborted"`.

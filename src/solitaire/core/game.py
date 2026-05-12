@@ -3,10 +3,12 @@ from solitaire.core.foundations import Foundations
 
 
 class Game:
-    def __init__(self, tableau, foundations=None):
+    def __init__(self, tableau, foundations=None, prior_moves=None):
         self._tableau = tableau
         self._foundations = foundations if foundations is not None else Foundations()
         self._moves = []
+        self._session_descriptions = []
+        self._prior_descriptions = list(prior_moves) if prior_moves else []
 
     @property
     def tableau(self):
@@ -21,6 +23,14 @@ class Game:
         return self._moves
 
     @property
+    def move_descriptions(self) -> list:
+        return self._prior_descriptions + self._session_descriptions
+
+    @property
+    def total_moves(self) -> int:
+        return len(self._prior_descriptions) + len(self._session_descriptions)
+
+    @property
     def is_won(self) -> bool:
         return self._foundations.is_complete
 
@@ -29,6 +39,9 @@ class Game:
 
     def apply(self, move) -> None:
         assert self.can_apply(move), f"Illegal move: {move}"
+        # Capture description BEFORE mutating so source card is correctly named.
+        self._session_descriptions.append(move.describe(self._tableau))
+
         columns = self._tableau.columns
         source_col = columns[move.source_column]
         n = move.count

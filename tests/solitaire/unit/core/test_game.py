@@ -187,3 +187,65 @@ def test_is_won_when_all_52_cards_on_foundations():
         for rank in ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]:
             game.foundations.add(face_up(suit, rank))
     assert game.is_won is True
+
+
+def test_apply_captures_move_description():
+    tableau = make_tableau(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=1, count=1, destination=ColumnDestination(0))
+    game.apply(move)
+    assert game.move_descriptions == ["7♥ from C2 moved to C1"]
+
+
+def test_apply_captures_description_before_mutation():
+    # If we captured AFTER mutation, the source column would be empty and
+    # describe() would fail. This test confirms pre-mutation timing.
+    tableau = make_tableau(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=1, count=1, destination=ColumnDestination(0))
+    game.apply(move)
+    # Source column is now empty; description must already be captured.
+    assert tableau.columns[1] == []
+    assert game.move_descriptions[0] == "7♥ from C2 moved to C1"
+
+
+def test_total_moves_starts_at_zero():
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau)
+    assert game.total_moves == 0
+
+
+def test_total_moves_increments_on_apply():
+    tableau = make_tableau(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=1, count=1, destination=ColumnDestination(0))
+    game.apply(move)
+    assert game.total_moves == 1
+
+
+def test_prior_moves_seed_descriptions_and_total():
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau, prior_moves=["X", "Y", "Z"])
+    assert game.move_descriptions == ["X", "Y", "Z"]
+    assert game.total_moves == 3
+
+
+def test_prior_moves_combined_with_session_moves():
+    tableau = make_tableau(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+    )
+    game = Game(tableau, prior_moves=["X", "Y"])
+    move = Move(source_column=1, count=1, destination=ColumnDestination(0))
+    game.apply(move)
+    assert game.move_descriptions == ["X", "Y", "7♥ from C2 moved to C1"]
+    assert game.total_moves == 3

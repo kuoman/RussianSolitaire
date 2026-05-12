@@ -40,4 +40,12 @@ class GameAnalyzer:
             )
             metadata[key] = "true" if playable else "false"
 
+        kings_on_home_row = sum(
+            1
+            for col_idx in range(1, _NUM_COLUMNS)
+            for card in [next((c for c in tableau.columns[col_idx] if c.face_up), None)]
+            if card is not None and card.rank == "K"
+        )
+        metadata["kings_on_home_row"] = kings_on_home_row
+
         return metadata

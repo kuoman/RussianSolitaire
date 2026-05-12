@@ -107,12 +107,12 @@ def test_king_first_face_up_is_not_playable():
     assert result["c2_playable"] == "false"
 
 
-def test_analyse_returns_all_seven_keys():
+def test_analyse_returns_all_expected_keys():
     from solitaire.deck import Deck
     from solitaire.tableau import Tableau
     tableau = Tableau(Deck())
     result = GameAnalyzer.analyse(tableau)
-    assert set(result.keys()) == {"c1_special", "c2_playable", "c3_playable", "c4_playable", "c5_playable", "c6_playable", "c7_playable"}
+    assert set(result.keys()) == {"c1_special", "c2_playable", "c3_playable", "c4_playable", "c5_playable", "c6_playable", "c7_playable", "kings_on_home_row"}
 
 
 def test_kings_on_home_row_is_zero_when_no_kings_are_first_face_up():

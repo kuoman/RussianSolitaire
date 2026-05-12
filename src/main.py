@@ -49,7 +49,7 @@ def main():
 
     tableau = _load_tableau(args.load) if args.load else _new_tableau(args.no_save)
     game = Game(tableau)
-    display = Display(tableau, debug=args.debug)
+    display = Display(tableau, debug=args.debug, foundations=game.foundations)
     Repl(game, display).run()
 
 

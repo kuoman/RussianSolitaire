@@ -68,3 +68,47 @@ def test_save_token_round_trip_face_down_two_of_diamonds():
     original = Card("♦", "2", face_up=False)
     restored = Card.from_save_token(original.to_save_token())
     expect_card(restored).to_have_suit("♦").and_rank("2").and_be_face_down()
+
+
+def test_cards_equal_when_suit_rank_face_up_match():
+    a = Card("♠", "A", face_up=True)
+    b = Card("♠", "A", face_up=True)
+    assert a == b
+
+
+def test_cards_not_equal_when_suit_differs():
+    a = Card("♠", "A", face_up=True)
+    b = Card("♥", "A", face_up=True)
+    assert a != b
+
+
+def test_cards_not_equal_when_rank_differs():
+    a = Card("♠", "A", face_up=True)
+    b = Card("♠", "2", face_up=True)
+    assert a != b
+
+
+def test_cards_not_equal_when_face_up_differs():
+    a = Card("♠", "A", face_up=True)
+    b = Card("♠", "A", face_up=False)
+    assert a != b
+
+
+def test_card_not_equal_to_non_card():
+    a = Card("♠", "A", face_up=True)
+    assert a != "A♠"
+    assert a != ("♠", "A", True)
+    assert a != None
+
+
+def test_equal_cards_have_equal_hash():
+    a = Card("♠", "A", face_up=True)
+    b = Card("♠", "A", face_up=True)
+    assert hash(a) == hash(b)
+
+
+def test_card_can_be_used_as_set_member():
+    a = Card("♠", "A", face_up=True)
+    b = Card("♠", "A", face_up=True)
+    s = {a}
+    assert b in s

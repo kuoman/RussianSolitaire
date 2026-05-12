@@ -37,3 +37,15 @@ class Card:
         suit = raw[-1]
         rank = raw[:-1]
         return cls(suit, rank, face_up=face_up)
+
+    def __eq__(self, other):
+        if not isinstance(other, Card):
+            return NotImplemented
+        return (
+            self._suit == other._suit
+            and self._rank == other._rank
+            and self._face_up == other._face_up
+        )
+
+    def __hash__(self):
+        return hash((self._suit, self._rank, self._face_up))

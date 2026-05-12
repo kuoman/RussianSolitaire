@@ -263,10 +263,8 @@ def test_snapshot_then_restore_returns_to_original_state():
     assert game.total_moves == 1
     game.restore(snapshot)
     assert game.total_moves == 0
-    assert len(tableau.columns[0]) == 1
-    assert tableau.columns[0][0].rank == "8" and tableau.columns[0][0].suit == "♥"
-    assert len(tableau.columns[1]) == 1
-    assert tableau.columns[1][0].rank == "7" and tableau.columns[1][0].suit == "♥"
+    assert tableau.columns[0] == [face_up("♥", "8")]
+    assert tableau.columns[1] == [face_up("♥", "7")]
 
 
 def test_snapshot_captures_foundations_state():

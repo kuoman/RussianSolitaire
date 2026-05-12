@@ -537,6 +537,19 @@ def test_save_writes_stuck_none_when_never_stuck():
         assert "stuck_threshold_move: none" in content
 
 
+def test_load_does_not_preserve_outcome_stats_in_prior_metadata():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau, legal_moves_per_turn=[5, 3, 1])
+        loaded = gf.load()
+        assert "time_to_first_foundation" not in loaded.prior_metadata
+        assert "face_down_at_end" not in loaded.prior_metadata
+        assert "stuck_threshold_move" not in loaded.prior_metadata
+        assert "legal_moves_per_turn" not in loaded.prior_metadata
+
+
 def test_save_legal_moves_per_turn_handles_empty():
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "test_game.md"

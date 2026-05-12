@@ -1,3 +1,4 @@
+from solitaire.core.card import Card
 from solitaire.core.foundations import Foundations
 
 
@@ -25,3 +26,17 @@ class Game:
 
     def can_apply(self, move) -> bool:
         return move.is_legal_on(self._tableau, self._foundations)
+
+    def apply(self, move) -> None:
+        assert self.can_apply(move), f"Illegal move: {move}"
+        columns = self._tableau.columns
+        source_col = columns[move.source_column]
+        n = move.count
+        moving_cards = source_col[-n:]
+        columns[move.source_column] = source_col[:-n]
+
+        destination = move.destination
+        if destination.is_column():
+            columns[destination.column_index()].extend(moving_cards)
+
+        self._moves.append(move)

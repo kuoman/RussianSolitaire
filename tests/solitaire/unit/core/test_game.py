@@ -66,3 +66,31 @@ def test_can_apply_is_false_for_illegal_move():
     game = Game(tableau)
     move = Move(source_column=0, count=1, destination=ColumnDestination(1))
     assert game.can_apply(move) is False
+
+
+def test_apply_moves_card_to_destination_column():
+    tableau = make_tableau(
+        [face_up("♥", "7")],
+        [face_up("♥", "8")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=ColumnDestination(1))
+    game.apply(move)
+    assert tableau.columns[0] == []
+    assert len(tableau.columns[1]) == 2
+    assert tableau.columns[1][0].rank == "8"
+    assert tableau.columns[1][0].suit == "♥"
+    assert tableau.columns[1][1].rank == "7"
+    assert tableau.columns[1][1].suit == "♥"
+
+
+def test_apply_appends_move_to_history():
+    tableau = make_tableau(
+        [face_up("♥", "7")],
+        [face_up("♥", "8")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=ColumnDestination(1))
+    game.apply(move)
+    assert len(game.moves) == 1
+    assert game.moves[0] is move

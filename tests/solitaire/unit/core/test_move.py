@@ -148,8 +148,10 @@ def test_move_stack_to_column_uses_topmost_card_for_validation():
 
 
 def test_king_to_empty_column_is_legal():
+    # K♠ at column[1] (not anchored — column[0] is a face-down card).
+    # Move K♠ alone to empty C2. Legal.
     tableau = make_tableau(
-        [face_up("♠", "K")],
+        [face_down("♣", "5"), face_up("♠", "K")],
         [],
     )
     foundations = Foundations()
@@ -168,9 +170,10 @@ def test_non_king_to_empty_column_is_illegal():
 
 
 def test_king_led_stack_to_empty_column_is_legal():
-    # Stack [K♠, Q♥, J♠] → empty column. Topmost is K♠ → legal.
+    # Stack [K♠, Q♥, J♠] not anchored (column[0] is a face-down card).
+    # Topmost moving card is K♠ → legal to move count=3 to empty column.
     tableau = make_tableau(
-        [face_up("♠", "K"), face_up("♥", "Q"), face_up("♠", "J")],
+        [face_down("♣", "5"), face_up("♠", "K"), face_up("♥", "Q"), face_up("♠", "J")],
         [],
     )
     foundations = Foundations()
@@ -240,6 +243,101 @@ def test_move_to_foundation_must_use_deepest_card():
     )
     foundations = Foundations()
     move = Move(source_column=0, count=1, destination=FoundationDestination())
+    assert move.is_legal_on(tableau, foundations) is True
+
+
+def test_anchored_king_cannot_move_to_empty_column():
+    # K♠ alone at column[0] of C1. Empty C2.
+    tableau = make_tableau(
+        [face_up("♠", "K")],
+        [],
+    )
+    foundations = Foundations()
+    move = Move(source_column=0, count=1, destination=ColumnDestination(1))
+    assert move.is_legal_on(tableau, foundations) is False
+
+
+def test_anchored_king_with_stack_cannot_move_to_empty_column():
+    # K♠ at column[0] with a Q♥, J♠ stacked. The whole stack would move (count=3) to C2.
+    tableau = make_tableau(
+        [face_up("♠", "K"), face_up("♥", "Q"), face_up("♠", "J")],
+        [],
+    )
+    foundations = Foundations()
+    move = Move(source_column=0, count=3, destination=ColumnDestination(1))
+    assert move.is_legal_on(tableau, foundations) is False
+
+
+def test_anchored_king_can_move_to_foundation_when_alone():
+    # Foundations have ♠ A through Q. K♠ alone at column[0]. Should be legal.
+    tableau = make_tableau(
+        [face_up("♠", "K")],
+    )
+    foundations = Foundations()
+    for rank in ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q"]:
+        foundations.add(Card("♠", rank, face_up=True))
+    move = Move(source_column=0, count=1, destination=FoundationDestination())
+    assert move.is_legal_on(tableau, foundations) is True
+
+
+def test_anchored_king_with_stack_cannot_move_to_foundation():
+    # K♠ at column[0] with stack. count=3 to foundation is illegal regardless of anchor
+    # (foundation only accepts single cards), but make sure the rule doesn't accidentally
+    # allow it.
+    tableau = make_tableau(
+        [face_up("♠", "K"), face_up("♥", "Q"), face_up("♠", "J")],
+    )
+    foundations = Foundations()
+    for rank in ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q"]:
+        foundations.add(Card("♠", rank, face_up=True))
+    move = Move(source_column=0, count=3, destination=FoundationDestination())
+    assert move.is_legal_on(tableau, foundations) is False
+
+
+def test_non_anchored_king_can_still_move_to_empty_column():
+    # K♠ at column[1] (not at index 0). Move K♠ alone to empty C2.
+    tableau = make_tableau(
+        [face_down("♣", "5"), face_up("♠", "K")],
+        [],
+    )
+    foundations = Foundations()
+    move = Move(source_column=0, count=1, destination=ColumnDestination(1))
+    assert move.is_legal_on(tableau, foundations) is True
+
+
+def test_non_anchored_king_with_stack_can_move_to_empty_column():
+    # K♠ at column[1] with Q♥ on top. Move K♠+Q♥ (count=2) to empty C2.
+    tableau = make_tableau(
+        [face_down("♣", "5"), face_up("♠", "K"), face_up("♥", "Q")],
+        [],
+    )
+    foundations = Foundations()
+    move = Move(source_column=0, count=2, destination=ColumnDestination(1))
+    assert move.is_legal_on(tableau, foundations) is True
+
+
+def test_anchored_king_cannot_move_to_another_anchored_position():
+    # K♠ alone at C1 (anchored), C2 also empty. Even moving to another empty column
+    # is illegal because of anchoring.
+    tableau = make_tableau(
+        [face_up("♠", "K")],
+        [],
+        [face_up("♥", "5")],
+    )
+    foundations = Foundations()
+    move = Move(source_column=0, count=1, destination=ColumnDestination(1))
+    assert move.is_legal_on(tableau, foundations) is False
+
+
+def test_non_king_at_column_zero_is_not_anchored():
+    # Q♥ at column[0]. Not a King, so anchoring doesn't apply.
+    # Q♥ on K♥ in C2 should be legal (same suit, one rank lower).
+    tableau = make_tableau(
+        [face_up("♥", "Q")],
+        [face_up("♥", "K")],
+    )
+    foundations = Foundations()
+    move = Move(source_column=0, count=1, destination=ColumnDestination(1))
     assert move.is_legal_on(tableau, foundations) is True
 
 

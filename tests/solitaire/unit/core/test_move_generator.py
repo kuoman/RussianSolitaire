@@ -54,8 +54,10 @@ def test_finds_ace_to_empty_foundation_move():
 
 
 def test_finds_king_to_empty_column_move():
+    # K♠ is at column[1] (column[0] is face-down) so it is NOT anchored.
+    # It can move to any of the 6 other empty columns.
     game = make_game(
-        [face_up("♠", "K")],
+        [face_down("♣", "5"), face_up("♠", "K")],
         [],
         [], [], [], [], [],
     )
@@ -85,8 +87,10 @@ def test_does_not_include_face_down_cards_as_source():
 
 
 def test_finds_multiple_destinations_for_same_card():
+    # K♠ at column[1] (not anchored) can move to any of 5 empty columns
+    # (C2, C3, C5, C6, C7 — C4 holds 5♥ which doesn't accept a K).
     game = make_game(
-        [face_up("♠", "K")],
+        [face_down("♣", "5"), face_up("♠", "K")],
         [],
         [],
         [face_up("♥", "5")],

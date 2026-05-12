@@ -40,7 +40,13 @@ class Move:
         if not source_card.face_up:
             return False
 
-        # 5. destination-specific validation
+        # 5. Anchored King rule: a King at column[0] (the deepest card)
+        # can only move to the foundation as a single card.
+        if source_card.rank == "K" and self._count == len(source_col):
+            if not (self._destination.is_foundation() and self._count == 1):
+                return False
+
+        # 6. destination-specific validation
         if self._destination.is_column():
             dest_idx = self._destination.column_index()
             # cannot move to the same column

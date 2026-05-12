@@ -10,6 +10,10 @@ def face_up(suit, rank):
     return Card(suit, rank, face_up=True)
 
 
+def face_down(suit, rank):
+    return Card(suit, rank, face_up=False)
+
+
 def make_game(*columns):
     return Game(_RawTableau([list(col) for col in columns]))
 
@@ -90,13 +94,14 @@ def test_non_blocking_makes_progress_with_multiple_aces():
 
 
 def test_non_blocking_prefers_foundation_when_future_counts_tie():
-    # Setup: K♥ in C1, A♠ in C2, C3..C7 empty.
+    # Setup: K♥ in C1 sitting on a face-down card (so K♥ is not anchored),
+    # A♠ in C2, C3..C7 empty.
     # Visible moves: K♥ to each of C3..C7 (5 column moves), and A♠ → foundation.
     # All six moves yield the same future-move count (6), so without the
     # foundation bonus the first move (a K♥ shuffle) would win the tie.
     # The bonus tips the scales toward the foundation move.
     game = make_game(
-        [face_up("♥", "K")],
+        [face_down("♣", "5"), face_up("♥", "K")],
         [face_up("♠", "A")],
         [], [], [], [], [],
     )

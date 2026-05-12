@@ -30,9 +30,7 @@ class GameFile:
             cells = []
             for col in tableau.columns:
                 if row < len(col):
-                    card = col[row]
-                    prefix = "" if card.face_up else "*"
-                    cells.append(f"{prefix}{card.rank}{card.suit}")
+                    cells.append(col[row].to_save_token())
                 else:
                     cells.append("")
             lines.append("| " + " | ".join(cells) + " |")
@@ -51,9 +49,5 @@ class GameFile:
                 )
             for col_idx, cell in enumerate(cells):
                 if cell:
-                    face_up = not cell.startswith("*")
-                    raw = cell.lstrip("*")
-                    suit = raw[-1]
-                    rank = raw[:-1]
-                    columns[col_idx].append(Card(suit, rank, face_up=face_up))
+                    columns[col_idx].append(Card.from_save_token(cell))
         return _RawTableau(columns)

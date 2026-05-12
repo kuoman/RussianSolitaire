@@ -25,3 +25,15 @@ class Card:
         if debug:
             return f"*{self._rank}{self._suit}"
         return "░░"
+
+    def to_save_token(self) -> str:
+        prefix = "" if self._face_up else "*"
+        return f"{prefix}{self._rank}{self._suit}"
+
+    @classmethod
+    def from_save_token(cls, token: str) -> "Card":
+        face_up = not token.startswith("*")
+        raw = token.lstrip("*")
+        suit = raw[-1]
+        rank = raw[:-1]
+        return cls(suit, rank, face_up=face_up)

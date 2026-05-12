@@ -32,3 +32,39 @@ def test_face_down_card_renders_as_block():
 def test_face_down_card_renders_with_star_prefix_in_debug_mode():
     card = Card("♣", "Q", face_up=False)
     expect_card(card).and_render_as("*Q♣", debug=True)
+
+def test_face_up_card_to_save_token_has_no_prefix():
+    card = Card("♠", "A", face_up=True)
+    assert card.to_save_token() == "A♠"
+
+def test_face_down_ten_to_save_token_uses_star_prefix():
+    card = Card("♥", "10", face_up=False)
+    assert card.to_save_token() == "*10♥"
+
+def test_from_save_token_parses_face_up_card():
+    card = Card.from_save_token("A♠")
+    expect_card(card).to_have_suit("♠").and_rank("A").and_be_face_up()
+
+def test_from_save_token_parses_face_down_ten():
+    card = Card.from_save_token("*10♥")
+    expect_card(card).to_have_suit("♥").and_rank("10").and_be_face_down()
+
+def test_save_token_round_trip_face_up_ace():
+    original = Card("♠", "A", face_up=True)
+    restored = Card.from_save_token(original.to_save_token())
+    expect_card(restored).to_have_suit("♠").and_rank("A").and_be_face_up()
+
+def test_save_token_round_trip_face_down_ten():
+    original = Card("♥", "10", face_up=False)
+    restored = Card.from_save_token(original.to_save_token())
+    expect_card(restored).to_have_suit("♥").and_rank("10").and_be_face_down()
+
+def test_save_token_round_trip_face_up_king_of_clubs():
+    original = Card("♣", "K", face_up=True)
+    restored = Card.from_save_token(original.to_save_token())
+    expect_card(restored).to_have_suit("♣").and_rank("K").and_be_face_up()
+
+def test_save_token_round_trip_face_down_two_of_diamonds():
+    original = Card("♦", "2", face_up=False)
+    restored = Card.from_save_token(original.to_save_token())
+    expect_card(restored).to_have_suit("♦").and_rank("2").and_be_face_down()

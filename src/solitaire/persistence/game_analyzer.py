@@ -1,7 +1,7 @@
 # src/solitaire/game_analyzer.py
+from solitaire.core.card import RANKS
 from solitaire.core.tableau import COLUMN_SIZES
 
-RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 _NUM_COLUMNS = len(COLUMN_SIZES)
 
 

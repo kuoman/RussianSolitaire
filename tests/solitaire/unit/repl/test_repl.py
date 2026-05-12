@@ -39,14 +39,19 @@ class FakeSaveTarget:
     def __init__(self):
         self.calls = []
 
-    def save(self, tableau, *, metadata=None, won="unknown", foundation_cards=0, move_log=None):
+    _UNSET = object()
+
+    def save(self, tableau, *, initial_tableau=None, metadata=None, won="unknown",
+             foundation_cards=0, move_log=None, strategy=_UNSET):
         self.calls.append(
             {
                 "tableau": tableau,
+                "initial_tableau": initial_tableau,
                 "metadata": metadata,
                 "won": won,
                 "foundation_cards": foundation_cards,
                 "move_log": list(move_log) if move_log else [],
+                "strategy": strategy if strategy is not FakeSaveTarget._UNSET else None,
             }
         )
 
@@ -315,3 +320,19 @@ def test_repl_passes_game_metadata_to_save_on_end():
     repl.run()
     assert len(save_target.calls) == 1
     assert save_target.calls[0]["metadata"] == deal_metadata
+
+
+def test_repl_passes_human_strategy_to_save():
+    game = make_game([face_up("♠", "A")])
+    save_target = FakeSaveTarget()
+    repl, _ = make_repl(game, ["q"], save_target=save_target)
+    repl.run()
+    assert save_target.calls[0]["strategy"] == "human"
+
+
+def test_repl_passes_initial_tableau_to_save():
+    game = make_game([face_up("♠", "A")])
+    save_target = FakeSaveTarget()
+    repl, _ = make_repl(game, ["q"], save_target=save_target)
+    repl.run()
+    assert save_target.calls[0]["initial_tableau"] is not None

@@ -78,10 +78,12 @@ class Repl:
             return
         self._save_target.save(
             self._game.tableau,
+            initial_tableau=self._game.initial_tableau,
             metadata=self._game.metadata,
             won=self._outcome_label(),
             foundation_cards=self._game.foundations.total_cards,
             move_log=self._game.move_descriptions,
+            strategy="human",
         )
 
     def _outcome_label(self) -> str:

@@ -40,7 +40,7 @@ def _load_tableau(path_str: str):
     return tableau, save_target, metadata
 
 
-def _new_tableau(no_save: bool):
+def _new_tableau(no_save: bool, strategy_label: str = "human"):
     deck = Deck()
     deck.shuffle()
     tableau = Tableau(deck)
@@ -49,7 +49,7 @@ def _new_tableau(no_save: bool):
         return tableau, None, metadata
     game_path = GameRegistry(DATA_DIR).next_game_path(date.today())
     save_target = GameFile(game_path, game_id=game_path.stem)
-    save_target.save(tableau, metadata=metadata)
+    save_target.save(tableau, metadata=metadata, strategy=strategy_label)
     print(f"Game saved to {game_path}")
     return tableau, save_target, metadata
 
@@ -64,15 +64,25 @@ def _build_strategy(strategy_name, depth):
     raise ValueError(f"unknown strategy: {strategy_name}")
 
 
-def _run_autoplay(game, save_target, strategy):
+def _strategy_label(args):
+    if not args.autoplay and args.runs is None:
+        return "human"
+    if args.strategy == "nply":
+        return f"nply-{args.depth}"
+    return args.strategy
+
+
+def _run_autoplay(game, save_target, strategy, strategy_label):
     outcome = Autoplayer(game, strategy=strategy).play()
     if save_target is not None:
         save_target.save(
             game.tableau,
+            initial_tableau=game.initial_tableau,
             metadata=game.metadata,
             won=outcome,
             foundation_cards=game.foundations.total_cards,
             move_log=game.move_descriptions,
+            strategy=strategy_label,
         )
     print(
         f"Result: {OUTCOME_WORD[outcome]} after {game.total_moves} moves "
@@ -85,6 +95,8 @@ def _run_batch(args):
         print("Error: --runs cannot be combined with --load", file=sys.stderr)
         sys.exit(1)
 
+    strategy_label = _strategy_label(args)
+
     def run_one():
         deck = Deck()
         deck.shuffle()
@@ -95,16 +107,18 @@ def _run_batch(args):
         if not args.no_save:
             game_path = GameRegistry(DATA_DIR).next_game_path(date.today())
             save_target = GameFile(game_path, game_id=game_path.stem)
-            save_target.save(tableau, metadata=metadata)
+            save_target.save(tableau, metadata=metadata, strategy=strategy_label)
         strategy = _build_strategy(args.strategy, args.depth)
         outcome = Autoplayer(game, strategy=strategy).play()
         if save_target is not None:
             save_target.save(
                 game.tableau,
+                initial_tableau=game.initial_tableau,
                 metadata=metadata,
                 won=outcome,
                 foundation_cards=game.foundations.total_cards,
                 move_log=game.move_descriptions,
+                strategy=strategy_label,
             )
         return {
             "outcome": outcome,
@@ -164,15 +178,16 @@ def main():
         _run_batch(args)
         return
 
+    strategy_label = _strategy_label(args)
     tableau, save_target, metadata = (
-        _load_tableau(args.load) if args.load else _new_tableau(args.no_save)
+        _load_tableau(args.load) if args.load else _new_tableau(args.no_save, strategy_label)
     )
     prior_moves = getattr(tableau, "prior_moves", None)
     game = Game(tableau, prior_moves=prior_moves, metadata=metadata)
 
     if args.autoplay:
         strategy = _build_strategy(args.strategy, args.depth)
-        _run_autoplay(game, save_target, strategy)
+        _run_autoplay(game, save_target, strategy, strategy_label)
         return
 
     display = Display(tableau, debug=args.debug, foundations=game.foundations)

@@ -33,7 +33,7 @@ def test_random_strategy_returns_only_choice_when_one_visible_move():
     assert chosen is only
 
 
-def test_random_strategy_picks_each_move_at_least_once_over_many_trials(monkeypatch):
+def test_random_strategy_picks_each_move_at_least_once_over_many_trials():
     # With 1000 trials of choosing from 3 moves, each should be picked at least once.
     game = make_game([face_up("♠", "A")])
     a = Move(0, 1, FoundationDestination())

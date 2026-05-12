@@ -39,10 +39,11 @@ class FakeSaveTarget:
     def __init__(self):
         self.calls = []
 
-    def save(self, tableau, *, won="unknown", foundation_cards=0, move_log=None):
+    def save(self, tableau, *, metadata=None, won="unknown", foundation_cards=0, move_log=None):
         self.calls.append(
             {
                 "tableau": tableau,
+                "metadata": metadata,
                 "won": won,
                 "foundation_cards": foundation_cards,
                 "move_log": list(move_log) if move_log else [],
@@ -303,3 +304,14 @@ def test_repl_skips_save_when_save_target_is_none():
     repl, _ = make_repl(game, ["q"], save_target=None)
     # Just verify run() doesn't blow up when save_target is None
     repl.run()
+
+
+def test_repl_passes_game_metadata_to_save_on_end():
+    tableau = _RawTableau([[face_up("♠", "A")], [], [], [], [], [], []])
+    deal_metadata = {"c1_special": "A", "kings_on_home_row": 0}
+    game = Game(tableau, metadata=deal_metadata)
+    save_target = FakeSaveTarget()
+    repl, _ = make_repl(game, ["q"], save_target=save_target)
+    repl.run()
+    assert len(save_target.calls) == 1
+    assert save_target.calls[0]["metadata"] == deal_metadata

@@ -84,10 +84,18 @@ A save contains:
 1. `# Game <id>` heading
 2. Header metadata: `version`, deal-shape analysis (`c1_special`,
    `cN_playable`, `kings_on_home_row`), and outcome (`won`,
-   `foundation_cards`, `moves`)
+   `foundation_cards`, `moves`, `strategy`,
+   `time_to_first_foundation`, `face_down_at_end`,
+   `stuck_threshold_move`, `legal_moves_per_turn`)
 3. A pipe-table representation of the tableau — face-down cards prefixed
    with `*`
 4. `## Moves` — numbered list of moves played in this session
+
+Outcome metric definitions:
+- `time_to_first_foundation` — 1-indexed move number of the first foundation move, or `none`.
+- `face_down_at_end` — count of face-down cards in the final tableau.
+- `stuck_threshold_move` — 1-indexed first move where visible-legal-move count became ≤2 and stayed ≤2 through game-end, or `none`.
+- `legal_moves_per_turn` — comma-separated visible-legal-move counts before each move (length equals total moves).
 
 Saves are overwritten on game end so each file always reflects the latest
 state. To replay from the original deal you would need to re-shuffle; saves

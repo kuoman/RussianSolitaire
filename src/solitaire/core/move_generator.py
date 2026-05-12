@@ -2,11 +2,13 @@ from solitaire.core.move import Move, ColumnDestination, FoundationDestination
 
 
 class MoveGenerator:
-    @staticmethod
-    def legal_moves(game) -> list:
+    def __init__(self, game):
+        self._game = game
+
+    def legal_moves(self) -> list:
         result = []
-        tableau = game.tableau
-        foundations = game.foundations
+        tableau = self._game.tableau
+        foundations = self._game.foundations
         n_cols = len(tableau.columns)
 
         for src_idx in range(n_cols):

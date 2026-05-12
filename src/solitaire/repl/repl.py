@@ -29,7 +29,7 @@ class Repl:
                 self._output("You won! Congratulations.")
                 return
 
-            self._current_moves = MoveGenerator.legal_moves(self._game)
+            self._current_moves = MoveGenerator(self._game).legal_moves()
             self._output(self._format_move_list(self._current_moves))
 
             try:

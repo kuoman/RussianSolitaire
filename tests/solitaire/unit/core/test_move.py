@@ -241,3 +241,27 @@ def test_move_to_foundation_must_use_deepest_card():
     foundations = Foundations()
     move = Move(source_column=0, count=1, destination=FoundationDestination())
     assert move.is_legal_on(tableau, foundations) is True
+
+
+def test_describe_single_card_move_to_column():
+    tableau = make_tableau(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+    )
+    move = Move(source_column=1, count=1, destination=ColumnDestination(0))
+    assert move.describe(tableau) == "7♥ from C2 moved to C1"
+
+
+def test_describe_stack_move():
+    tableau = make_tableau(
+        [face_up("♣", "8")],
+        [face_up("♣", "7"), face_up("♦", "6")],
+    )
+    move = Move(source_column=1, count=2, destination=ColumnDestination(0))
+    assert move.describe(tableau) == "7♣ from C2 moved to C1"
+
+
+def test_describe_foundation_move():
+    tableau = make_tableau([face_up("♠", "A")])
+    move = Move(source_column=0, count=1, destination=FoundationDestination())
+    assert move.describe(tableau) == "A♠ from C1 moved to foundation"

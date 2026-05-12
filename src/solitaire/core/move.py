@@ -74,6 +74,15 @@ class Move:
 
         return False
 
+    def describe(self, tableau) -> str:
+        source_col = tableau.columns[self._source_column]
+        source_card = source_col[len(source_col) - self._count]
+        if self._destination.is_foundation():
+            dest_str = "foundation"
+        else:
+            dest_str = f"C{self._destination.column_index() + 1}"
+        return f"{source_card.rank}{source_card.suit} from C{self._source_column + 1} moved to {dest_str}"
+
 
 class ColumnDestination:
     def __init__(self, column_index: int):

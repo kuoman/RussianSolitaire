@@ -7,6 +7,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from solitaire.autoplay.autoplayer import Autoplayer
+from solitaire.autoplay.strategies.first_move import FirstMoveStrategy
+from solitaire.autoplay.strategies.non_blocking import NonBlockingStrategy
+from solitaire.autoplay.strategies.nply import NplyStrategy
 from solitaire.core.deck import Deck
 from solitaire.core.game import Game
 from solitaire.core.tableau import Tableau
@@ -47,8 +50,18 @@ def _new_tableau(no_save: bool):
     return tableau, save_target
 
 
-def _run_autoplay(game, save_target):
-    outcome = Autoplayer(game).play()
+def _build_strategy(strategy_name, depth):
+    if strategy_name == "first":
+        return FirstMoveStrategy()
+    if strategy_name == "non-blocking":
+        return NonBlockingStrategy()
+    if strategy_name == "nply":
+        return NplyStrategy(depth=depth)
+    raise ValueError(f"unknown strategy: {strategy_name}")
+
+
+def _run_autoplay(game, save_target, strategy):
+    outcome = Autoplayer(game, strategy=strategy).play()
     if save_target is not None:
         save_target.save(
             game.tableau,
@@ -68,6 +81,18 @@ def main():
     parser.add_argument("--no-save", action="store_true", help="Do not save game to file")
     parser.add_argument("--load", metavar="PATH", help="Load a saved game file")
     parser.add_argument("--autoplay", action="store_true", help="Autoplay until win or stuck")
+    parser.add_argument(
+        "--strategy",
+        choices=["first", "non-blocking", "nply"],
+        default="first",
+        help="Autoplay strategy",
+    )
+    parser.add_argument(
+        "--depth",
+        type=int,
+        default=1,
+        help="Lookahead depth (nply only)",
+    )
     args = parser.parse_args()
 
     tableau, save_target = (
@@ -77,7 +102,8 @@ def main():
     game = Game(tableau, prior_moves=prior_moves)
 
     if args.autoplay:
-        _run_autoplay(game, save_target)
+        strategy = _build_strategy(args.strategy, args.depth)
+        _run_autoplay(game, save_target, strategy)
         return
 
     display = Display(tableau, debug=args.debug, foundations=game.foundations)

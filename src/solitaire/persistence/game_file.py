@@ -4,7 +4,7 @@ from solitaire.core.tableau import COLUMN_SIZES
 from solitaire.core.card import Card
 from solitaire import __version__
 
-_OUTCOME_KEYS = {"won", "foundation_cards", "moves"}
+_OUTCOME_KEYS = {"won", "foundation_cards", "moves", "strategy"}
 _VERSION_KEY = "version"
 
 
@@ -14,7 +14,7 @@ class GameFile:
         self._game_id = game_id
 
     def save(self, tableau, *, initial_tableau=None, metadata=None, won="unknown",
-             foundation_cards=0, move_log=None) -> None:
+             foundation_cards=0, move_log=None, strategy="human") -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
         if metadata is None:
             from solitaire.persistence.game_analyzer import GameAnalyzer
@@ -22,7 +22,9 @@ class GameFile:
         log = list(move_log) if move_log else []
         initial = initial_tableau if initial_tableau is not None else tableau
         has_final = initial_tableau is not None and won != "true"
-        header_lines = self._build_header_lines(metadata, won, foundation_cards, len(log))
+        header_lines = self._build_header_lines(
+            metadata, won, foundation_cards, len(log), strategy
+        )
         initial_section = self._build_table_section("Initial Deal", initial)
         final_section = self._build_table_section("Final State", tableau) if has_final else []
         moves_lines = self._build_moves_section(log)
@@ -36,12 +38,13 @@ class GameFile:
         lines.append("")
         return lines
 
-    def _build_header_lines(self, metadata, won, foundation_cards, moves_count) -> list:
+    def _build_header_lines(self, metadata, won, foundation_cards, moves_count, strategy) -> list:
         meta_lines = [f"{k}: {v}" for k, v in metadata.items()]
         outcome_lines = [
             f"won: {won}",
             f"foundation_cards: {foundation_cards}",
             f"moves: {moves_count}",
+            f"strategy: {strategy}",
         ]
         return [f"# Game {self._game_id}", "", f"version: {__version__}"] + meta_lines + outcome_lines + [""]
 

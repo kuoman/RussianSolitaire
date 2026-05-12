@@ -440,6 +440,36 @@ def test_load_reads_from_initial_deal_section_not_final_state():
         assert loaded.columns[1][0].rank == "K"
 
 
+def test_save_writes_strategy_field():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau, strategy="nply-3")
+        content = path.read_text()
+        assert "strategy: nply-3" in content
+
+
+def test_save_default_strategy_is_human():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau)
+        content = path.read_text()
+        assert "strategy: human" in content
+
+
+def test_load_does_not_preserve_strategy_in_prior_metadata():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau, strategy="nply-3")
+        loaded = gf.load()
+        assert "strategy" not in loaded.prior_metadata
+
+
 def test_load_falls_back_to_first_table_for_legacy_format():
     # Legacy format: no `## Initial Deal` heading, just the table.
     with tempfile.TemporaryDirectory() as tmp:

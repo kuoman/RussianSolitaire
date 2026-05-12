@@ -42,7 +42,8 @@ class FakeSaveTarget:
     _UNSET = object()
 
     def save(self, tableau, *, initial_tableau=None, metadata=None, won="unknown",
-             foundation_cards=0, move_log=None, strategy=_UNSET):
+             foundation_cards=0, move_log=None, strategy=_UNSET,
+             legal_moves_per_turn=None):
         self.calls.append(
             {
                 "tableau": tableau,
@@ -52,6 +53,7 @@ class FakeSaveTarget:
                 "foundation_cards": foundation_cards,
                 "move_log": list(move_log) if move_log else [],
                 "strategy": strategy if strategy is not FakeSaveTarget._UNSET else None,
+                "legal_moves_per_turn": list(legal_moves_per_turn) if legal_moves_per_turn else [],
             }
         )
 
@@ -336,3 +338,17 @@ def test_repl_passes_initial_tableau_to_save():
     repl, _ = make_repl(game, ["q"], save_target=save_target)
     repl.run()
     assert save_target.calls[0]["initial_tableau"] is not None
+
+
+def test_repl_passes_legal_moves_per_turn_to_save():
+    game = make_game(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+        [], [], [], [], [],
+    )
+    save_target = FakeSaveTarget()
+    repl, _ = make_repl(game, ["1", "q"], save_target=save_target)
+    repl.run()
+    assert "legal_moves_per_turn" in save_target.calls[0]
+    # After one apply, the list should have one entry
+    assert len(save_target.calls[0]["legal_moves_per_turn"]) == 1

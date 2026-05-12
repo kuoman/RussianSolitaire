@@ -84,6 +84,7 @@ class Repl:
             foundation_cards=self._game.foundations.total_cards,
             move_log=self._game.move_descriptions,
             strategy="human",
+            legal_moves_per_turn=self._game.legal_moves_per_turn,
         )
 
     def _outcome_label(self) -> str:

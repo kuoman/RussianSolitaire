@@ -88,6 +88,7 @@ def _run_autoplay(game, save_target, strategy, strategy_label):
             foundation_cards=game.foundations.total_cards,
             move_log=game.move_descriptions,
             strategy=strategy_label,
+            legal_moves_per_turn=game.legal_moves_per_turn,
         )
     print(
         f"Result: {OUTCOME_WORD[outcome]} after {game.total_moves} moves "
@@ -124,6 +125,7 @@ def _run_batch(args):
                 foundation_cards=game.foundations.total_cards,
                 move_log=game.move_descriptions,
                 strategy=strategy_label,
+                legal_moves_per_turn=game.legal_moves_per_turn,
             )
         return {
             "outcome": outcome,

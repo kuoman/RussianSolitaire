@@ -4,7 +4,16 @@ from solitaire.core.tableau import COLUMN_SIZES
 from solitaire.core.card import Card
 from solitaire import __version__
 
-_OUTCOME_KEYS = {"won", "foundation_cards", "moves", "strategy"}
+_OUTCOME_KEYS = {
+    "won",
+    "foundation_cards",
+    "moves",
+    "strategy",
+    "time_to_first_foundation",
+    "face_down_at_end",
+    "stuck_threshold_move",
+    "legal_moves_per_turn",
+}
 _VERSION_KEY = "version"
 
 
@@ -14,16 +23,18 @@ class GameFile:
         self._game_id = game_id
 
     def save(self, tableau, *, initial_tableau=None, metadata=None, won="unknown",
-             foundation_cards=0, move_log=None, strategy="human") -> None:
+             foundation_cards=0, move_log=None, strategy="human",
+             legal_moves_per_turn=None) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
         if metadata is None:
             from solitaire.persistence.game_analyzer import GameAnalyzer
             metadata = GameAnalyzer(tableau).analyse()
         log = list(move_log) if move_log else []
+        legal_counts = list(legal_moves_per_turn) if legal_moves_per_turn else []
         initial = initial_tableau if initial_tableau is not None else tableau
         has_final = initial_tableau is not None and won != "true"
         header_lines = self._build_header_lines(
-            metadata, won, foundation_cards, len(log), strategy
+            tableau, metadata, won, foundation_cards, len(log), strategy, log, legal_counts
         )
         initial_section = self._build_table_section("Initial Deal", initial)
         final_section = self._build_table_section("Final State", tableau) if has_final else []
@@ -38,15 +49,47 @@ class GameFile:
         lines.append("")
         return lines
 
-    def _build_header_lines(self, metadata, won, foundation_cards, moves_count, strategy) -> list:
+    def _build_header_lines(self, tableau, metadata, won, foundation_cards,
+                            moves_count, strategy, move_log, legal_counts) -> list:
         meta_lines = [f"{k}: {v}" for k, v in metadata.items()]
         outcome_lines = [
             f"won: {won}",
             f"foundation_cards: {foundation_cards}",
             f"moves: {moves_count}",
             f"strategy: {strategy}",
+            f"time_to_first_foundation: {self._fmt_optional_int(self._time_to_first_foundation(move_log))}",
+            f"face_down_at_end: {self._face_down_at_end(tableau)}",
+            f"stuck_threshold_move: {self._fmt_optional_int(self._stuck_threshold_move(legal_counts))}",
+            f"legal_moves_per_turn: {self._fmt_legal_counts(legal_counts)}",
         ]
         return [f"# Game {self._game_id}", "", f"version: {__version__}"] + meta_lines + outcome_lines + [""]
+
+    def _time_to_first_foundation(self, move_log):
+        for i, desc in enumerate(move_log, start=1):
+            if "moved to foundation" in desc:
+                return i
+        return None
+
+    def _face_down_at_end(self, tableau):
+        return sum(1 for col in tableau.columns for card in col if not card.face_up)
+
+    def _stuck_threshold_move(self, legal_counts):
+        if not legal_counts:
+            return None
+        for i, count in enumerate(legal_counts):
+            if count is None:
+                continue
+            if count <= 2 and all((c is None or c <= 2) for c in legal_counts[i:]):
+                return i + 1
+        return None
+
+    def _fmt_optional_int(self, n):
+        return "none" if n is None else str(n)
+
+    def _fmt_legal_counts(self, counts):
+        if not counts:
+            return ""
+        return ",".join("?" if c is None else str(c) for c in counts)
 
     def _build_moves_section(self, move_log: list) -> list:
         if not move_log:

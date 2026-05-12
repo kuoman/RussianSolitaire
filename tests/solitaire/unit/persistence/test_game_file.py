@@ -464,6 +464,90 @@ def test_load_does_not_preserve_strategy_in_prior_metadata():
         assert "strategy" not in loaded.prior_metadata
 
 
+def test_save_writes_face_down_at_end():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        # Tableau with 3 face-down cards, 1 face-up
+        tableau = _RawTableau([
+            [Card("♠", "A", face_up=False), Card("♥", "5", face_up=True)],
+            [Card("♣", "K", face_up=False), Card("♦", "7", face_up=False)],
+            [], [], [], [], [],
+        ])
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau, metadata={"c1_special": "none"})
+        content = path.read_text()
+        assert "face_down_at_end: 3" in content
+
+
+def test_save_writes_time_to_first_foundation():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau, move_log=[
+            "7♥ from C2 moved to C1",
+            "A♠ from C3 moved to foundation",
+            "8♣ from C4 moved to C5",
+        ])
+        content = path.read_text()
+        assert "time_to_first_foundation: 2" in content
+
+
+def test_save_writes_none_when_no_foundation_move():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau, move_log=[
+            "7♥ from C2 moved to C1",
+            "8♣ from C4 moved to C5",
+        ])
+        content = path.read_text()
+        assert "time_to_first_foundation: none" in content
+
+
+def test_save_writes_legal_moves_per_turn():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau, legal_moves_per_turn=[12, 9, 7, 5, 3, 2, 1])
+        content = path.read_text()
+        assert "legal_moves_per_turn: 12,9,7,5,3,2,1" in content
+
+
+def test_save_writes_stuck_threshold_move():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        # Counts go [12, 9, 7, 5, 3, 2, 1, 2, 1] — first sustained ≤2 starts at index 5 (move 6)
+        gf.save(tableau, legal_moves_per_turn=[12, 9, 7, 5, 3, 2, 1, 2, 1])
+        content = path.read_text()
+        assert "stuck_threshold_move: 6" in content
+
+
+def test_save_writes_stuck_none_when_never_stuck():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau, legal_moves_per_turn=[12, 9, 7, 5, 3, 5, 4])
+        content = path.read_text()
+        assert "stuck_threshold_move: none" in content
+
+
+def test_save_legal_moves_per_turn_handles_empty():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau)  # no legal_moves_per_turn arg
+        content = path.read_text()
+        assert "legal_moves_per_turn:" in content
+        assert "stuck_threshold_move: none" in content
+
+
 def test_load_falls_back_to_first_table_for_legacy_format():
     # Legacy format: no `## Initial Deal` heading, just the table.
     with tempfile.TemporaryDirectory() as tmp:

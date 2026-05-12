@@ -46,3 +46,23 @@ def test_new_game_is_not_won():
     tableau = make_tableau([face_up("♠", "A")])
     game = Game(tableau)
     assert game.is_won is False
+
+
+def test_can_apply_is_true_for_legal_move():
+    tableau = make_tableau(
+        [face_up("♥", "7")],
+        [face_up("♥", "8")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=ColumnDestination(1))
+    assert game.can_apply(move) is True
+
+
+def test_can_apply_is_false_for_illegal_move():
+    tableau = make_tableau(
+        [face_up("♥", "7")],
+        [face_up("♠", "8")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=ColumnDestination(1))
+    assert game.can_apply(move) is False

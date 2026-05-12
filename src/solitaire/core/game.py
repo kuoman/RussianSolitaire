@@ -22,3 +22,6 @@ class Game:
     @property
     def is_won(self) -> bool:
         return self._foundations.is_complete
+
+    def can_apply(self, move) -> bool:
+        return move.is_legal_on(self._tableau, self._foundations)

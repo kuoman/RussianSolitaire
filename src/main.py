@@ -11,6 +11,7 @@ from solitaire.autoplay.batch_runner import BatchRunner
 from solitaire.autoplay.strategies.first_move import FirstMoveStrategy
 from solitaire.autoplay.strategies.non_blocking import NonBlockingStrategy
 from solitaire.autoplay.strategies.nply import NplyStrategy
+from solitaire.autoplay.strategies.random_strategy import RandomStrategy
 from solitaire.core.deck import Deck
 from solitaire.core.game import Game
 from solitaire.core.tableau import Tableau
@@ -61,6 +62,8 @@ def _build_strategy(strategy_name, depth):
         return NonBlockingStrategy()
     if strategy_name == "nply":
         return NplyStrategy(depth=depth)
+    if strategy_name == "random":
+        return RandomStrategy()
     raise ValueError(f"unknown strategy: {strategy_name}")
 
 
@@ -156,7 +159,7 @@ def main():
     parser.add_argument("--autoplay", action="store_true", help="Autoplay until win or stuck")
     parser.add_argument(
         "--strategy",
-        choices=["first", "non-blocking", "nply"],
+        choices=["first", "non-blocking", "nply", "random"],
         default="first",
         help="Autoplay strategy",
     )

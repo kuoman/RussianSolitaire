@@ -29,7 +29,7 @@ class Repl:
                 self._output("You won! Congratulations.")
                 return
 
-            self._current_moves = MoveGenerator(self._game).legal_moves()
+            self._current_moves = self._visible_moves(MoveGenerator(self._game).legal_moves())
             self._output(self._format_move_list(self._current_moves))
 
             try:
@@ -61,6 +61,20 @@ class Repl:
                     self._game.apply(move)
                 else:
                     self._output("Illegal move.")
+
+    def _visible_moves(self, moves):
+        foundation_sources = set()
+        for move in moves:
+            if move.destination.is_foundation():
+                foundation_sources.add((move.source_column, move.count))
+
+        visible = []
+        for move in moves:
+            if move.destination.is_foundation():
+                visible.append(move)
+            elif (move.source_column, move.count) not in foundation_sources:
+                visible.append(move)
+        return visible
 
     def _format_move_list(self, moves) -> str:
         if not moves:

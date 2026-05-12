@@ -149,3 +149,42 @@ def test_repl_no_legal_moves_message():
     repl.run()
     rendered = "\n".join(captured)
     assert "no legal moves" in rendered.lower() or "no available" in rendered.lower()
+
+
+def test_repl_filters_out_column_move_when_foundation_move_available():
+    # K♠ in C1 with ♠ A-Q already on foundation. K♠ can go to foundation
+    # OR into any of the empty columns C2-C7. Expect only the foundation
+    # move to be displayed.
+    game = make_game([face_up("♠", "K")], [], [], [], [], [], [])
+    for rank in ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q"]:
+        game.foundations.add(Card("♠", rank, face_up=True))
+    repl, captured = make_repl(game, ["q"])
+    repl.run()
+    rendered = "\n".join(captured)
+    assert "K♠ from C1 moved to foundation" in rendered
+    assert "K♠ from C1 moved to C2" not in rendered
+    assert "K♠ from C1 moved to C3" not in rendered
+
+
+def test_repl_keeps_column_moves_when_no_foundation_alternative():
+    # 7♥ to 8♥ — column move only; foundation is empty so 7♥ cannot go there.
+    game = make_game(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+        [], [], [], [], [],
+    )
+    repl, captured = make_repl(game, ["q"])
+    repl.run()
+    rendered = "\n".join(captured)
+    assert "7♥ from C2 moved to C1" in rendered
+
+
+def test_repl_pick_uses_filtered_list():
+    # K♠ to foundation (with ♠ A-Q already there). Without filter, foundation
+    # would be one of many; with filter, picking 1 must apply the foundation move.
+    game = make_game([face_up("♠", "K")], [], [], [], [], [], [])
+    for rank in ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q"]:
+        game.foundations.add(Card("♠", rank, face_up=True))
+    repl, captured = make_repl(game, ["1", "q"])
+    repl.run()
+    assert game.foundations.for_suit("♠").size == 13

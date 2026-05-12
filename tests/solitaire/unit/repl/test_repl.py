@@ -98,3 +98,54 @@ def test_repl_announces_win_after_winning_move():
         or "win" in rendered.lower()
         or "congrat" in rendered.lower()
     )
+
+
+def test_repl_lists_available_moves():
+    game = make_game(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+        [], [], [], [], [],
+    )
+    repl, captured = make_repl(game, ["q"])
+    repl.run()
+    rendered = "\n".join(captured)
+    assert "Available moves" in rendered
+    assert "7♥ from C2 moved to C1" in rendered
+
+
+def test_repl_dispatches_pick():
+    game = make_game(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+        [], [], [], [], [],
+    )
+    repl, captured = make_repl(game, ["1", "q"])
+    repl.run()
+    assert len(game.moves) == 1
+    assert game.tableau.columns[1] == []
+    assert game.tableau.columns[0][-1].rank == "7"
+
+
+def test_repl_pick_out_of_range_is_error():
+    game = make_game(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+        [], [], [], [], [],
+    )
+    repl, captured = make_repl(game, ["99", "q"])
+    repl.run()
+    assert len(game.moves) == 0
+    rendered = "\n".join(captured)
+    assert "out of range" in rendered.lower() or "choose" in rendered.lower()
+
+
+def test_repl_no_legal_moves_message():
+    game = make_game(
+        [face_up("♠", "5")],
+        [face_up("♥", "9")],
+        [], [], [], [], [],
+    )
+    repl, captured = make_repl(game, ["q"])
+    repl.run()
+    rendered = "\n".join(captured)
+    assert "no legal moves" in rendered.lower() or "no available" in rendered.lower()

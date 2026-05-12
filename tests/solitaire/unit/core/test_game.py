@@ -353,3 +353,38 @@ def test_snapshot_captures_move_descriptions():
     assert game.move_descriptions == ["7♥ from C2 moved to C1"]
     game.restore(snapshot)
     assert game.move_descriptions == []
+
+
+def test_legal_moves_per_turn_starts_empty():
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau)
+    assert game.legal_moves_per_turn == []
+
+
+def test_legal_moves_per_turn_records_count_before_apply():
+    # Pre-apply legal-move count when game has only A♠ in C1: foundation move → 1 visible move.
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=FoundationDestination())
+    game.apply(move)
+    assert game.legal_moves_per_turn == [1]
+
+
+def test_legal_moves_per_turn_seeds_with_none_for_prior_moves():
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau, prior_moves=["X", "Y", "Z"])
+    assert game.legal_moves_per_turn == [None, None, None]
+
+
+def test_snapshot_restore_preserves_legal_moves_per_turn():
+    tableau = make_tableau(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+    )
+    game = Game(tableau)
+    snap = game.snapshot()
+    move = Move(source_column=1, count=1, destination=ColumnDestination(0))
+    game.apply(move)
+    assert len(game.legal_moves_per_turn) == 1
+    game.restore(snap)
+    assert game.legal_moves_per_turn == []

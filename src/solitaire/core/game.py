@@ -12,6 +12,10 @@ class Game:
         self._session_descriptions = []
         self._prior_descriptions = list(prior_moves) if prior_moves else []
         self._metadata = dict(metadata) if metadata else {}
+        # Pre-apply visible-legal-move count, captured per call to apply().
+        # When prior_moves is provided we don't have the actual counts — pad with
+        # None placeholders to keep alignment with total_moves.
+        self._legal_counts_per_turn = [None] * len(self._prior_descriptions)
 
     @property
     def tableau(self):
@@ -42,6 +46,10 @@ class Game:
         return len(self._prior_descriptions) + len(self._session_descriptions)
 
     @property
+    def legal_moves_per_turn(self) -> list:
+        return list(self._legal_counts_per_turn)
+
+    @property
     def is_won(self) -> bool:
         return self._foundations.is_complete
 
@@ -50,6 +58,12 @@ class Game:
 
     def apply(self, move) -> None:
         assert self.can_apply(move), f"Illegal move: {move}"
+        # Capture visible legal-move count BEFORE applying so we record what
+        # the player/autoplayer was actually choosing from.
+        from solitaire.core.move_generator import MoveGenerator
+        from solitaire.core.move_filter import MoveFilter
+        visible = MoveFilter(MoveGenerator(self).legal_moves()).visible()
+        self._legal_counts_per_turn.append(len(visible))
         # Capture description BEFORE mutating so source card is correctly named.
         self._session_descriptions.append(move.describe(self._tableau))
 
@@ -81,6 +95,7 @@ class Game:
             },
             "moves": list(self._moves),
             "session_descriptions": list(self._session_descriptions),
+            "legal_counts_per_turn": list(self._legal_counts_per_turn),
         }
 
     def restore(self, snap) -> None:
@@ -90,3 +105,4 @@ class Game:
             self._foundations.for_suit(suit).restore(cards)
         self._moves = list(snap["moves"])
         self._session_descriptions = list(snap["session_descriptions"])
+        self._legal_counts_per_turn = list(snap["legal_counts_per_turn"])

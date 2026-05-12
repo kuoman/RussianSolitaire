@@ -14,15 +14,22 @@ class Repl:
         "Destinations: c1..c7 or f (foundation)"
     )
 
-    def __init__(self, game, display, input_fn=input, output_fn=print):
+    def __init__(self, game, display, input_fn=input, output_fn=print, *, save_target=None):
         self._game = game
         self._display = display
         self._input = input_fn
         self._output = output_fn
         self._parser = CommandParser(game)
         self._current_moves = []
+        self._save_target = save_target
 
     def run(self) -> None:
+        try:
+            self._loop()
+        finally:
+            self._save_outcome()
+
+    def _loop(self) -> None:
         while True:
             self._output(self._display.render())
             if self._game.is_won:
@@ -64,6 +71,23 @@ class Repl:
                     self._game.apply(move)
                 else:
                     self._output("Illegal move.")
+
+    def _save_outcome(self) -> None:
+        if self._save_target is None:
+            return
+        self._save_target.save(
+            self._game.tableau,
+            won=self._outcome_label(),
+            foundation_cards=self._game.foundations.total_cards,
+            moves=len(self._game.moves),
+        )
+
+    def _outcome_label(self) -> str:
+        if self._game.is_won:
+            return "true"
+        if not MoveGenerator(self._game).legal_moves():
+            return "false"
+        return "unknown"
 
     def _visible_moves(self, moves):
         foundation_sources = set()

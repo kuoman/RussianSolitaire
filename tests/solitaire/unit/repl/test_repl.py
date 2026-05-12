@@ -14,7 +14,7 @@ def make_game(*columns):
     return Game(tableau)
 
 
-def make_repl(game, inputs):
+def make_repl(game, inputs, save_target=None):
     """inputs is a list of strings to feed; output_fn captures output."""
     iterator = iter(inputs)
     captured = []
@@ -25,8 +25,29 @@ def make_repl(game, inputs):
     def fake_output(s):
         captured.append(s)
 
-    repl = Repl(game, Display(game.tableau), input_fn=fake_input, output_fn=fake_output)
+    repl = Repl(
+        game,
+        Display(game.tableau),
+        input_fn=fake_input,
+        output_fn=fake_output,
+        save_target=save_target,
+    )
     return repl, captured
+
+
+class FakeSaveTarget:
+    def __init__(self):
+        self.calls = []
+
+    def save(self, tableau, *, won="unknown", foundation_cards=0, moves=0):
+        self.calls.append(
+            {
+                "tableau": tableau,
+                "won": won,
+                "foundation_cards": foundation_cards,
+                "moves": moves,
+            }
+        )
 
 
 def test_repl_renders_tableau_then_quits_on_q():
@@ -208,3 +229,62 @@ def test_repl_pick_uses_filtered_list():
     repl, captured = make_repl(game, ["1", "q"])
     repl.run()
     assert game.foundations.for_suit("♠").size == 13
+
+
+def test_repl_saves_on_quit_with_won_unknown():
+    game = make_game(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+        [], [], [], [], [],
+    )
+    save_target = FakeSaveTarget()
+    repl, _ = make_repl(game, ["q"], save_target=save_target)
+    repl.run()
+    assert len(save_target.calls) == 1
+    call = save_target.calls[0]
+    assert call["won"] == "unknown"
+    assert call["foundation_cards"] == 0
+    assert call["moves"] == 0
+    assert call["tableau"] is game.tableau
+
+
+def test_repl_saves_on_win_with_won_true():
+    game = make_game([face_up("♠", "K")])
+    for rank in ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q"]:
+        game.foundations.add(Card("♠", rank, face_up=True))
+    for suit in ("♥", "♦", "♣"):
+        for rank in ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]:
+            game.foundations.add(Card(suit, rank, face_up=True))
+    save_target = FakeSaveTarget()
+    repl, _ = make_repl(game, ["Ks c1 moved to f"], save_target=save_target)
+    repl.run()
+    assert game.is_won is True
+    assert len(save_target.calls) == 1
+    call = save_target.calls[0]
+    assert call["won"] == "true"
+    assert call["foundation_cards"] == 52
+    assert call["moves"] == 1
+
+
+def test_repl_saves_on_loss_with_won_false():
+    # Stranded cards. No legal moves exist — auto-exit triggers loss save.
+    game = make_game(
+        [face_up("♠", "5")],
+        [face_up("♥", "9")],
+        [], [], [], [], [],
+    )
+    save_target = FakeSaveTarget()
+    repl, _ = make_repl(game, [], save_target=save_target)
+    repl.run()
+    assert len(save_target.calls) == 1
+    call = save_target.calls[0]
+    assert call["won"] == "false"
+    assert call["foundation_cards"] == 0
+    assert call["moves"] == 0
+
+
+def test_repl_skips_save_when_save_target_is_none():
+    game = make_game([face_up("♠", "A")])
+    repl, _ = make_repl(game, ["q"], save_target=None)
+    # Just verify run() doesn't blow up when save_target is None
+    repl.run()

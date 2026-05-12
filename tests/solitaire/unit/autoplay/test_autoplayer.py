@@ -71,3 +71,22 @@ def test_autoplay_aborts_on_max_moves_cap():
     outcome = Autoplayer(game, max_moves=1).play()
     assert outcome == "aborted"
     assert game.total_moves == 1
+
+
+def test_autoplayer_uses_provided_strategy():
+    class StubStrategy:
+        def __init__(self):
+            self.calls = 0
+
+        def select(self, game, visible_moves):
+            self.calls += 1
+            return visible_moves[0]
+
+    game = make_game(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+        [], [], [], [], [],
+    )
+    stub = StubStrategy()
+    Autoplayer(game, strategy=stub).play()
+    assert stub.calls >= 1

@@ -89,7 +89,7 @@ class Repl:
     def _outcome_label(self) -> str:
         if self._game.is_won:
             return "true"
-        if not MoveGenerator(self._game).legal_moves():
+        if not self._current_moves:
             return "false"
         return "unknown"
 

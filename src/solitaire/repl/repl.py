@@ -1,3 +1,4 @@
+from solitaire.core.move_filter import MoveFilter
 from solitaire.core.move_generator import MoveGenerator
 from solitaire.repl.command_parser import CommandParser
 
@@ -90,18 +91,7 @@ class Repl:
         return "unknown"
 
     def _visible_moves(self, moves):
-        foundation_sources = set()
-        for move in moves:
-            if move.destination.is_foundation():
-                foundation_sources.add((move.source_column, move.count))
-
-        visible = []
-        for move in moves:
-            if move.destination.is_foundation():
-                visible.append(move)
-            elif (move.source_column, move.count) not in foundation_sources:
-                visible.append(move)
-        return visible
+        return MoveFilter(moves).visible()
 
     def _format_move_list(self, moves) -> str:
         if not moves:

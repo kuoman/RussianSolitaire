@@ -55,6 +55,7 @@ Python implementation of Russian Solitaire card game.
 - Favor composition over inheritance
 - Immutability where appropriate
 - Clear, intention-revealing names
+- **No `@staticmethod`**: every method is an instance method. If a class has only static methods it isn't really an object — give it a constructor that takes its dependencies and convert the methods. The one allowed exception is `@classmethod` used as a Pythonic alternate constructor (e.g. `Card.from_save_token`).
 
 ## Commit Workflow
 

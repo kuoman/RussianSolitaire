@@ -1,12 +1,12 @@
 # tests/solitaire/unit/test_game_file.py
 import tempfile
 from pathlib import Path
-from solitaire.card import Card
-from solitaire.game_file import GameFile
+from solitaire.core.card import Card
+from solitaire.persistence.game_file import GameFile
 
 def make_minimal_tableau():
-    from solitaire.deck import Deck
-    from solitaire.tableau import Tableau
+    from solitaire.core.deck import Deck
+    from solitaire.core.tableau import Tableau
     deck = Deck()
     return Tableau(deck)
 

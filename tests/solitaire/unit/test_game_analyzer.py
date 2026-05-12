@@ -1,7 +1,7 @@
 # tests/solitaire/unit/test_game_analyzer.py
-from solitaire.card import Card
-from solitaire.tableau import _RawTableau
-from solitaire.game_analyzer import GameAnalyzer
+from solitaire.core.card import Card
+from solitaire.core.tableau import _RawTableau
+from solitaire.persistence.game_analyzer import GameAnalyzer
 
 
 def make_column(*cards):
@@ -108,16 +108,16 @@ def test_king_first_face_up_is_not_playable():
 
 
 def test_analyse_returns_all_expected_keys():
-    from solitaire.deck import Deck
-    from solitaire.tableau import Tableau
+    from solitaire.core.deck import Deck
+    from solitaire.core.tableau import Tableau
     tableau = Tableau(Deck())
     result = GameAnalyzer.analyse(tableau)
     assert set(result.keys()) == {"c1_special", "c2_playable", "c3_playable", "c4_playable", "c5_playable", "c6_playable", "c7_playable", "kings_on_home_row"}
 
 
 def test_kings_on_home_row_is_zero_when_no_kings_are_first_face_up():
-    from solitaire.deck import Deck
-    from solitaire.tableau import Tableau
+    from solitaire.core.deck import Deck
+    from solitaire.core.tableau import Tableau
     # Use a standard unshuffled deck — unlikely to have kings as first face-up
     # Build a tableau where no column C2-C7 has a King as first face-up
     tableau = make_tableau([
@@ -149,8 +149,8 @@ def test_kings_on_home_row_counts_kings_as_first_face_up_in_c2_to_c7():
 
 
 def test_kings_on_home_row_is_in_analyse_result_keys():
-    from solitaire.deck import Deck
-    from solitaire.tableau import Tableau
+    from solitaire.core.deck import Deck
+    from solitaire.core.tableau import Tableau
     tableau = Tableau(Deck())
     result = GameAnalyzer.analyse(tableau)
     assert "kings_on_home_row" in result

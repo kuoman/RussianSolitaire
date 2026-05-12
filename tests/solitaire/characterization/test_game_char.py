@@ -3,9 +3,9 @@
 
 import tempfile
 from pathlib import Path
-from solitaire.deck import Deck
-from solitaire.tableau import Tableau
-from solitaire.game_file import GameFile
+from solitaire.core.deck import Deck
+from solitaire.core.tableau import Tableau
+from solitaire.persistence.game_file import GameFile
 
 
 def make_tableau():

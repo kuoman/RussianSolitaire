@@ -1,7 +1,7 @@
 # PROTECTED: do not modify without explicit human permission
 
-from solitaire.deck import Deck
-from solitaire.tableau import Tableau
+from solitaire.core.deck import Deck
+from solitaire.core.tableau import Tableau
 from tests.solitaire.assertions import expect_tableau
 
 def make_tableau():

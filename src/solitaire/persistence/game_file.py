@@ -1,7 +1,7 @@
 # src/solitaire/game_file.py
 from pathlib import Path
-from solitaire.tableau import COLUMN_SIZES
-from solitaire.card import Card
+from solitaire.core.tableau import COLUMN_SIZES
+from solitaire.core.card import Card
 from solitaire import __version__
 
 
@@ -11,7 +11,7 @@ class GameFile:
         self._game_id = game_id
 
     def save(self, tableau, *, won="unknown", foundation_cards=0, moves=0) -> None:
-        from solitaire.game_analyzer import GameAnalyzer
+        from solitaire.persistence.game_analyzer import GameAnalyzer
         self._path.parent.mkdir(parents=True, exist_ok=True)
         metadata = GameAnalyzer.analyse(tableau)
         meta_lines = [f"{k}: {v}" for k, v in metadata.items()]
@@ -39,7 +39,7 @@ class GameFile:
         self._path.write_text("\n".join(lines) + "\n")
 
     def load(self):
-        from solitaire.tableau import _RawTableau
+        from solitaire.core.tableau import _RawTableau
         lines = self._path.read_text().splitlines()
         data_rows = [l for l in lines if l.startswith("|") and "C1" not in l and "---" not in l]
         columns = [[] for _ in range(len(COLUMN_SIZES))]

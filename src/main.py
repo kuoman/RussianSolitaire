@@ -6,11 +6,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from solitaire.deck import Deck
-from solitaire.tableau import Tableau
+from solitaire.core.deck import Deck
+from solitaire.core.tableau import Tableau
 from solitaire.display import Display
-from solitaire.game_registry import GameRegistry
-from solitaire.game_file import GameFile
+from solitaire.persistence.game_registry import GameRegistry
+from solitaire.persistence.game_file import GameFile
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 

@@ -1,4 +1,4 @@
-from solitaire.deck import Deck
+from solitaire.core.deck import Deck
 from tests.solitaire.assertions import expect_deck
 
 

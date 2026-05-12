@@ -1,5 +1,5 @@
-from solitaire.card import Card
-from solitaire.deck import Deck
+from solitaire.core.card import Card
+from solitaire.core.deck import Deck
 
 COLUMN_SIZES = [1, 6, 7, 8, 9, 10, 11]
 

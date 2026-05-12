@@ -297,3 +297,46 @@ def test_load_parses_prior_moves_from_section():
             "7♥ from C2 moved to C1",
             "A♠ from C3 moved to foundation",
         ]
+
+
+def test_load_round_trips_metadata():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau)  # initial save with analyzer-derived metadata
+        loaded = gf.load()
+        assert "c1_special" in loaded.prior_metadata
+        assert "kings_on_home_row" in loaded.prior_metadata
+        for col_num in range(2, 8):
+            assert f"c{col_num}_playable" in loaded.prior_metadata
+
+
+def test_load_metadata_excludes_outcome_keys():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau, won="true", foundation_cards=52)
+        loaded = gf.load()
+        assert "won" not in loaded.prior_metadata
+        assert "foundation_cards" not in loaded.prior_metadata
+        assert "moves" not in loaded.prior_metadata
+        assert "version" not in loaded.prior_metadata
+
+
+def test_load_returns_empty_metadata_dict_by_default_on_raw_tableau():
+    # _RawTableau alone (with no metadata) should expose an empty dict, not None.
+    raw = _RawTableau([[], [], [], [], [], [], []])
+    assert raw.prior_metadata == {}
+
+
+def test_load_metadata_converts_kings_on_home_row_to_int():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        gf = GameFile(path, game_id="test")
+        gf.save(tableau)
+        loaded = gf.load()
+        # kings_on_home_row is numeric; round-trip should yield an int
+        assert isinstance(loaded.prior_metadata["kings_on_home_row"], int)

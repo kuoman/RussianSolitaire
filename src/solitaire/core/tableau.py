@@ -18,6 +18,7 @@ class Tableau:
 
 
 class _RawTableau:
-    def __init__(self, columns: list, prior_moves=None):
+    def __init__(self, columns: list, prior_moves=None, prior_metadata=None):
         self.columns = columns
         self.prior_moves = list(prior_moves) if prior_moves else []
+        self.prior_metadata = dict(prior_metadata) if prior_metadata else {}

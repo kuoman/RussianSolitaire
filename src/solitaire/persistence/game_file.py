@@ -4,6 +4,9 @@ from solitaire.core.tableau import COLUMN_SIZES
 from solitaire.core.card import Card
 from solitaire import __version__
 
+_OUTCOME_KEYS = {"won", "foundation_cards", "moves"}
+_VERSION_KEY = "version"
+
 
 class GameFile:
     def __init__(self, path: Path, game_id: str):
@@ -55,7 +58,36 @@ class GameFile:
         lines = self._path.read_text().splitlines()
         columns = self._parse_columns(lines)
         prior_moves = self._parse_moves_section(lines)
-        return _RawTableau(columns, prior_moves=prior_moves)
+        prior_metadata = self._parse_metadata(lines)
+        return _RawTableau(
+            columns,
+            prior_moves=prior_moves,
+            prior_metadata=prior_metadata,
+        )
+
+    def _parse_metadata(self, lines: list) -> dict:
+        metadata = {}
+        for line in lines:
+            if line.startswith("|") or line.startswith("#"):
+                continue
+            if line.strip() == "## Moves":
+                break
+            if ":" not in line:
+                continue
+            key, _, value = line.partition(":")
+            key = key.strip()
+            value = value.strip()
+            if not key:
+                continue
+            if key == _VERSION_KEY or key in _OUTCOME_KEYS:
+                continue
+            if key == "kings_on_home_row":
+                try:
+                    value = int(value)
+                except ValueError:
+                    pass
+            metadata[key] = value
+        return metadata
 
     def _parse_columns(self, lines: list) -> list:
         data_rows = [l for l in lines if l.startswith("|") and "C1" not in l and "---" not in l]

@@ -11,8 +11,13 @@ class GameFile:
         self._game_id = game_id
 
     def save(self, tableau, *, won="unknown", foundation_cards=0, moves=0) -> None:
-        from solitaire.persistence.game_analyzer import GameAnalyzer
         self._path.parent.mkdir(parents=True, exist_ok=True)
+        header_lines = self._build_header_lines(tableau, won, foundation_cards, moves)
+        table_lines = self._build_table_lines(tableau)
+        self._path.write_text("\n".join(header_lines + table_lines) + "\n")
+
+    def _build_header_lines(self, tableau, won, foundation_cards, moves) -> list:
+        from solitaire.persistence.game_analyzer import GameAnalyzer
         metadata = GameAnalyzer.analyse(tableau)
         meta_lines = [f"{k}: {v}" for k, v in metadata.items()]
         outcome_lines = [
@@ -20,25 +25,27 @@ class GameFile:
             f"foundation_cards: {foundation_cards}",
             f"moves: {moves}",
         ]
-        lines = [f"# Game {self._game_id}", "", f"version: {__version__}"] + meta_lines + outcome_lines + [""]
+        return [f"# Game {self._game_id}", "", f"version: {__version__}"] + meta_lines + outcome_lines + [""]
+
+    def _build_table_lines(self, tableau) -> list:
         max_rows = max(len(col) for col in tableau.columns)
         header = "| " + " | ".join(f"C{i+1}" for i in range(len(COLUMN_SIZES))) + " |"
         separator = "| " + " | ".join("---" for _ in range(len(COLUMN_SIZES))) + " |"
-        lines.append(header)
-        lines.append(separator)
+        lines = [header, separator]
         for row in range(max_rows):
             cells = []
             for col in tableau.columns:
-                if row < len(col):
-                    cells.append(col[row].to_save_token())
-                else:
-                    cells.append("")
+                cells.append(col[row].to_save_token() if row < len(col) else "")
             lines.append("| " + " | ".join(cells) + " |")
-        self._path.write_text("\n".join(lines) + "\n")
+        return lines
 
     def load(self):
         from solitaire.core.tableau import _RawTableau
         lines = self._path.read_text().splitlines()
+        columns = self._parse_columns(lines)
+        return _RawTableau(columns)
+
+    def _parse_columns(self, lines: list) -> list:
         data_rows = [l for l in lines if l.startswith("|") and "C1" not in l and "---" not in l]
         columns = [[] for _ in range(len(COLUMN_SIZES))]
         for row in data_rows:
@@ -50,4 +57,4 @@ class GameFile:
             for col_idx, cell in enumerate(cells):
                 if cell:
                     columns[col_idx].append(Card.from_save_token(cell))
-        return _RawTableau(columns)
+        return columns

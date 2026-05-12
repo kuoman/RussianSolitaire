@@ -59,7 +59,14 @@ Python implementation of Russian Solitaire card game.
 ## Commit Workflow
 
 - **Micro commits**: Commit small, atomic changes frequently
-- **Arlo Belshee's commit notation**: Use Arlo's notation style for commit messages
+- **Arlo Belshee's commit notation**: Use strict Arlo notation — single character prefix, no colon:
+  - `t` — test only, no production code changed
+  - `r` — refactor, provably safe (behaviour unchanged, passes before and after)
+  - `R` — refactor, higher risk (touching production logic)
+  - `F` — new feature (production code, new behaviour)
+  - `b` — bug fix
+  - `d` — documentation only
+  - Uppercase = higher risk; lowercase = safe/mechanical
 - **Committer skill**: Always use the committer skill when creating commits (invoked via `c` or `/commit`)
 - Commits should be small enough to easily understand and revert if needed
 

@@ -77,6 +77,14 @@ def test_saved_file_contains_c1_special_metadata():
         content = path.read_text()
         assert "c1_special:" in content
 
+def test_saved_file_contains_kings_on_home_row_metadata():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "test_game.md"
+        tableau = make_minimal_tableau()
+        GameFile(path, game_id="2026-05-11-000001").save(tableau)
+        content = path.read_text()
+        assert "kings_on_home_row:" in content
+
 def test_saved_file_contains_playability_metadata_for_all_columns():
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "test_game.md"

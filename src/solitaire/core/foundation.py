@@ -36,3 +36,9 @@ class Foundation:
     def add(self, card) -> None:
         assert self.can_accept(card), f"Cannot add {card.rank}{card.suit} to {self._suit} foundation"
         self._cards.append(card)
+
+    def snapshot(self) -> list:
+        return list(self._cards)
+
+    def restore(self, snap) -> None:
+        self._cards = list(snap)

@@ -60,3 +60,22 @@ class Game:
             new_source_col[-1] = Card(exposed.suit, exposed.rank, face_up=True)
 
         self._moves.append(move)
+
+    def snapshot(self):
+        return {
+            "columns": [list(col) for col in self._tableau.columns],
+            "foundations": {
+                suit: self._foundations.for_suit(suit).snapshot()
+                for suit in ("♠", "♥", "♦", "♣")
+            },
+            "moves": list(self._moves),
+            "session_descriptions": list(self._session_descriptions),
+        }
+
+    def restore(self, snap) -> None:
+        for i, col in enumerate(snap["columns"]):
+            self._tableau.columns[i] = list(col)
+        for suit, cards in snap["foundations"].items():
+            self._foundations.for_suit(suit).restore(cards)
+        self._moves = list(snap["moves"])
+        self._session_descriptions = list(snap["session_descriptions"])

@@ -249,3 +249,45 @@ def test_prior_moves_combined_with_session_moves():
     game.apply(move)
     assert game.move_descriptions == ["X", "Y", "7♥ from C2 moved to C1"]
     assert game.total_moves == 3
+
+
+def test_snapshot_then_restore_returns_to_original_state():
+    tableau = make_tableau(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+    )
+    game = Game(tableau)
+    move = Move(source_column=1, count=1, destination=ColumnDestination(0))
+    snapshot = game.snapshot()
+    game.apply(move)
+    assert game.total_moves == 1
+    game.restore(snapshot)
+    assert game.total_moves == 0
+    assert len(tableau.columns[0]) == 1
+    assert tableau.columns[0][0].rank == "8" and tableau.columns[0][0].suit == "♥"
+    assert len(tableau.columns[1]) == 1
+    assert tableau.columns[1][0].rank == "7" and tableau.columns[1][0].suit == "♥"
+
+
+def test_snapshot_captures_foundations_state():
+    tableau = make_tableau([face_up("♠", "A")])
+    game = Game(tableau)
+    move = Move(source_column=0, count=1, destination=FoundationDestination())
+    snapshot = game.snapshot()
+    game.apply(move)
+    assert game.foundations.total_cards == 1
+    game.restore(snapshot)
+    assert game.foundations.total_cards == 0
+
+
+def test_snapshot_captures_move_descriptions():
+    tableau = make_tableau(
+        [face_up("♥", "8")],
+        [face_up("♥", "7")],
+    )
+    game = Game(tableau)
+    snapshot = game.snapshot()
+    game.apply(Move(1, 1, ColumnDestination(0)))
+    assert game.move_descriptions == ["7♥ from C2 moved to C1"]
+    game.restore(snapshot)
+    assert game.move_descriptions == []

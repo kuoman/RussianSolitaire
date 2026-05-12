@@ -8,9 +8,8 @@ class Foundation:
         self._suit = suit
         self._cards = []
 
-    @property
-    def suit(self) -> str:
-        return self._suit
+    def is_suit(self, suit: str) -> bool:
+        return self._suit == suit
 
     @property
     def size(self) -> int:

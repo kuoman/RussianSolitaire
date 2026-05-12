@@ -24,7 +24,7 @@ def test_for_suit_returns_a_foundation_for_each_suit():
     for suit in ("♠", "♥", "♦", "♣"):
         f = foundations.for_suit(suit)
         assert isinstance(f, Foundation)
-        assert f.suit == suit
+        assert f.is_suit(suit) is True
 
 
 def test_for_suit_returns_same_foundation_each_call():

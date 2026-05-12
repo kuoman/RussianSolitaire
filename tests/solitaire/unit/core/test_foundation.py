@@ -18,9 +18,14 @@ def test_new_foundation_has_no_top():
     assert foundation.top is None
 
 
-def test_foundation_remembers_its_suit():
+def test_foundation_is_suit_true_for_its_own_suit():
     foundation = Foundation("♥")
-    assert foundation.suit == "♥"
+    assert foundation.is_suit("♥") is True
+
+
+def test_foundation_is_suit_false_for_other_suit():
+    foundation = Foundation("♥")
+    assert foundation.is_suit("♠") is False
 
 
 def test_empty_foundation_accepts_ace_of_its_suit():

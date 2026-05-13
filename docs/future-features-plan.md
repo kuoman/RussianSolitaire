@@ -157,9 +157,56 @@ A scratchpad for ideas not yet implemented. Each section gives enough context fo
 
 ---
 
-## Project state at write time (2026-05-12)
+## Empirical findings — what 20K+ games taught us
 
-**Tests:** 286 passing.
+Carry these forward; they shape what's worth trying next.
+
+- **Strategy choice barely matters at this scale.** `non-blocking`, `nply-3`, and `reveal-first` all win ~4.0–4.2% on random deals (10K each). 95% CI half-width is ~0.4pp, so the differences are within noise. `first` and `random` also land near 4% — even pure random play wins about as often as the smart strategies.
+- **Real signal lives in the deal, not the strategy.** Deal-quality features (`playable_count`, `c1_special`, anchored Kings) reliably stratify wins. See `docs/analysis/winnability-signals.md` for the full breakdown.
+- **Lookahead doesn't pay off at depth 3.** `nply-3` slightly under-performs `non-blocking` on rich deals (6 playable: 5.5% vs 8.9%). Either we need a much deeper search or a better leaf evaluator. The current evaluator is `foundation_cards + 0.1×face_up`.
+- **Sample-size noise is bigger than expected.** First 1K vs next 9K of `reveal-first` differed by 0.46pp on the same strategy. 100-run smoke tests are basically a coin toss — don't draw conclusions from anything under 1K.
+- **The anchored-King rule is critical to terminate games.** Without it, autoplay used to ping-pong Kings between empty columns forever and hit the 10K-move cap. With the rule, 0 aborts in 30K+ games.
+- **Foundation moves dominate strategically.** Both `non-blocking` and `reveal-first` add a +1.5 bonus to foundation moves to prevent cycling and to nudge progress.
+- **King-in-C1 is a real curse.** ~2.7% win rate vs 4.0% baseline — a King at column[0] is anchored and locks C1 until ♠ Q reaches foundation.
+- **Ace-in-C1 is a real boon.** ~6.1% win rate. Ace goes to foundation immediately and clears C1 for a King.
+- **Per-column playability matters more for deeper columns.** C7 playable boosts win rate ~70%; C2 playable barely moves the needle.
+
+## Gotchas & lessons learned
+
+Hard-won wisdom for future Claude sessions:
+
+- **The protected-test rule is real.** `tests/solitaire/characterization/` cannot be modified without explicit permission. The user has granted permission case-by-case (e.g., for the `LoadedGame` extraction). Always stop and ask; never silently edit.
+- **Watch out for uncommitted working-tree changes during analysis.** A buggy change to `src/solitaire/core/move_filter.py` once silently inflated `reveal-first` win rates. Always run `git status` and `git diff` before trusting performance numbers.
+- **Use `git add` selectively, not `git add -A`.** Subagents have repeatedly swept untracked save files (`data/*.md`) into commits, polluting the diff. Specify exact paths.
+- **Strict Arlo notation has no colon.** `t Game tracks legal moves` — not `t: Game tracks legal moves`. The colon style was used early on; it's been corrected. Future commits should match.
+- **No `@staticmethod` anywhere in `src/`.** Only `@classmethod` for alternate constructors (e.g., `Card.from_save_token`). This is a hard rule documented in CLAUDE.md.
+- **Use `.venv/bin/pytest`, not bare `pytest`.** The venv has the project's pinned versions.
+- **Run the full test suite after every change.** It's sub-second (~300 tests in 0.13s). No reason to skip.
+- **`Card` is immutable.** Every modification (e.g., flipping face-up) constructs a new `Card`. Don't try to mutate.
+- **Game.apply() has a perf cost now.** It captures `len(MoveFilter(MoveGenerator(self).legal_moves()).visible())` per call to track `legal_moves_per_turn`. Fine for autoplay; might bite future deep-lookahead work. If `nply --depth 5+` becomes slow, make the capture optional.
+- **Session continuity:** start a new session by reading `CLAUDE.md` (auto-loaded) then this file's "Project state" + "Empirical findings" sections.
+
+## Tooling reference (`playground/`)
+
+These scripts aren't part of the production code but are useful for analysis:
+
+| Script | Purpose |
+|---|---|
+| `playground/analyze_strategy.py <strategy-label>` | Win-rate slices by `c1_special`, `kings_on_home_row`, per-column playability, count of playable. Quick view. |
+| `playground/winnability_signals.py <strategy-label>` | Deeper analysis with 95% CI significance markers, combined feature buckets, and a composite deal-quality score. The richer tool. |
+| `playground/king_face_down_analysis.py` | Per-game analysis of "how many face-down cards remained under a King when it was first moved" — replays each save file's move log. |
+| `playground/analyze_non_blocking.py` | Older non-blocking-specific analyzer. Largely subsumed by `analyze_strategy.py`. |
+| `playground/md_to_html.py <md-files...>` | Render markdown analysis docs to standalone HTML for browser print-to-PDF. |
+
+**HTML → PDF workflow:** `python3 playground/md_to_html.py docs/analysis/<file>.md` then `open docs/analysis/<file>.html`, then Cmd+P → "Save as PDF" in the browser. The HTML uses a print-friendly stylesheet.
+
+**Generating fresh datasets:** see `docs/batch-commands.md` for the full reference. Quick recipe: `python3 src/main.py --runs 10000 --strategy non-blocking` (with saves) or add `--no-save` for pure-stats runs.
+
+---
+
+## Project state at write time (2026-05-13)
+
+**Tests:** 299 passing. Run with `.venv/bin/pytest`.
 
 **Source structure:**
 ```
@@ -172,17 +219,19 @@ src/solitaire/
 │   ├── tableau.py     (Tableau, _RawTableau)
 │   ├── foundation.py  (per-suit pile)
 │   ├── foundations.py (4-suit container)
-│   ├── game.py        (apply, can_apply, snapshot/restore, move log, initial_tableau, metadata)
-│   ├── move.py        (Move + ColumnDestination + FoundationDestination)
+│   ├── game.py        (apply, can_apply, snapshot/restore, move log, initial_tableau,
+│   │                   metadata, legal_moves_per_turn)
+│   ├── move.py        (Move + ColumnDestination + FoundationDestination + anchored-King rule)
 │   ├── move_generator.py
 │   └── move_filter.py (foundation-preferred filter)
 ├── persistence/
-│   ├── game_file.py   (Markdown save format with deal/final tables, move log, metadata)
+│   ├── game_file.py   (Markdown save format with deal/final tables, move log, metadata,
+│   │                   outcome stats; LoadedGame value object on load)
 │   ├── game_registry.py (daily-incrementing IDs)
 │   ├── game_analyzer.py (deal-time metadata: c1_special, cN_playable, kings_on_home_row)
 │   └── loaded_game.py (value object returned by GameFile.load())
 ├── repl/
-│   ├── repl.py        (Numbered-list REPL with --no-save; auto-detects win/loss; saves on exit)
+│   ├── repl.py        (Numbered-list REPL; auto-detects win/loss; saves on exit)
 │   └── command_parser.py
 └── autoplay/
     ├── autoplayer.py
@@ -192,31 +241,46 @@ src/solitaire/
         ├── first_move.py
         ├── random_strategy.py
         ├── non_blocking.py (foundation +1.5 bonus prevents cycling)
-        ├── nply.py (recursive search, depth N)
+        ├── nply.py (recursive search, depth N; evaluator: foundation_cards + 0.1×face_up)
         └── reveal_first.py (+100 reveal-face-down, +1.5 foundation, +len(future) tiebreak)
 ```
 
-**Save file format:**
-- Markdown with front-matter style metadata
-- `## Initial Deal` and `## Final State` sections (Final State omitted when won)
-- `## Moves` section as numbered move descriptions (e.g., `7♥ from C2 moved to C1`)
-- Strategy field records which strategy played the game (`human`, `first`, `non-blocking`, `nply-3`, etc.)
+**Save file format (current):**
+- Markdown with front-matter style metadata at the top
+- `## Initial Deal` (always) and `## Final State` (omitted on win) — pipe tables of cards
+- `## Moves` section: numbered list of move descriptions (e.g., `7♥ from C2 moved to C1`)
+- Header fields:
+  - `version`, deal metadata (`c1_special`, `cN_playable`, `kings_on_home_row`), `strategy`
+  - Outcome: `won`, `foundation_cards`, `moves`
+  - Outcome stats: `time_to_first_foundation`, `face_down_at_end`, `stuck_threshold_move`, `legal_moves_per_turn`
+- `LoadedGame.prior_metadata` excludes outcome keys — they're recomputed every save
 
 **CLI features:**
 - `--no-save` skip persistence
-- `--load <path>` load a saved game
+- `--load <path>` load a saved game (drops into REPL)
 - `--debug` reveal face-down cards
-- `--autoplay --strategy <name>` run autoplay
-- `--strategy nply --depth N` configure lookahead
-- `--runs N` batch autoplay with summary stats
+- `--autoplay --strategy <name>` run autoplay (skips REPL)
+- Strategies: `first`, `random`, `non-blocking`, `nply --depth N`, `reveal-first`
+- `--runs N` batch autoplay with summary stats (incompatible with `--load`)
 
 **Conventions:**
-- TDD with strict Arlo notation (`t`, `r`, `R`, `F`, `b`, `d`)
+- TDD with strict Arlo notation (`t`, `r`, `R`, `F`, `b`, `d`) — single character, no colon
 - Smalltalk-inspired OOP, no `@staticmethod` (only `@classmethod` for alternate constructors)
 - Tests in `tests/solitaire/unit/` are AI-editable; `tests/solitaire/characterization/` is PROTECTED
 - Trunk-based development on `main`
 
+**Documentation layout:**
+- `CLAUDE.md` — auto-loaded project guide (rules, structure, conventions)
+- `README.md` — project front door
+- `docs/rules.md`, `docs/gameplay.md` — game rules and user guide
+- `docs/gameplay-hints.md` — data-driven advice for human players
+- `docs/batch-commands.md` — autoplay batch command reference
+- `docs/future-features-plan.md` — this file
+- `docs/development-journal.md` — historical log
+- `docs/analysis/` — dataset writeups (`winnability-signals.md`, `thousand-non-blocking-games.md`, `thousand-nply-3-games.md`, plus `.html` siblings for printing)
+- `docs/superpowers/` — original specs and plans (historical, do not edit)
+
 **Key data assets:**
-- 20,000+ autoplay save files in `data/` (when not deleted)
-- Analysis scripts in `playground/`
-- Findings docs: `analysis/winnability-signals.md`, `analysis/thousand-non-blocking-games.md`, `analysis/thousand-nply-3-games.md`, `gameplay-hints.md`
+- Up to 20,000+ autoplay save files in `data/` (cleaned periodically; regenerate via batch commands)
+- Analysis scripts in `playground/` — see Tooling reference above
+- Detailed findings: `docs/analysis/winnability-signals.md` (10K games, with significance), `docs/analysis/thousand-non-blocking-games.md`, `docs/analysis/thousand-nply-3-games.md`

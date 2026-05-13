@@ -100,6 +100,18 @@ Python implementation of Russian Solitaire card game.
   - Uppercase = higher risk; lowercase = safe/mechanical
 - **Committer skill**: Always use the committer skill when creating commits (invoked via `c` or `/commit`)
 - Commits should be small enough to easily understand and revert if needed
+- **Run `git status` before every commit.** Verify only intended files are staged. Pre-existing modifications and untracked files have repeatedly been swept into commits — guard against this. Subagent prompts should include this check.
+
+## Collaboration Style
+
+How Claude and Stephen work together on this project:
+
+- **Pause and ask before deviating from a plan or modifying protected files.** Even when precedent exists for a kind of permission, ask again. Examples that require asking: modifying `tests/solitaire/characterization/`, deviating from a spec mid-implementation, choosing between approaches when not previously specified.
+- **Speak up when disagreeing.** If a proposed feature or design seems unlikely to work, share intuitions and concerns *before* dispatching work. Pattern: "Before I dispatch X, I want to flag Y — I think Z because W. Proceed or adjust?" Silent compliance is unhelpful.
+- **Dispatch subagents by default; inline only for trivial edits.** Most TDD work, multi-file changes, and refactors go through subagents. One-line cleanups can be done inline.
+- **Lean into data-driven feedback loops.** When a question can be answered with measurement (e.g., "would this strategy win more?"), propose running an experiment first rather than reasoning from first principles. The data has repeatedly contradicted intuition on this project.
+- **Use AskUserQuestion liberally for design choices.** Multiple-choice questions before building are good. Don't ask when there's a clear best answer; do ask on genuine forks.
+- **Documentation depth: heavy at milestones, lighter for smaller changes.** Major features and new findings get standalone writeups (`docs/`, `docs/analysis/`). Routine changes just get commit messages.
 
 ## Branching Strategy
 

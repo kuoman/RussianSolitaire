@@ -219,4 +219,4 @@ src/solitaire/
 **Key data assets:**
 - 20,000+ autoplay save files in `data/` (when not deleted)
 - Analysis scripts in `playground/`
-- Findings docs: `winnability-signals.md`, `thousand-non-blocking-games.md`, `thousand-nply-3-games.md`, `gameplay-hints.md`
+- Findings docs: `analysis/winnability-signals.md`, `analysis/thousand-non-blocking-games.md`, `analysis/thousand-nply-3-games.md`, `gameplay-hints.md`

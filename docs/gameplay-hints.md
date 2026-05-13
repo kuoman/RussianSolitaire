@@ -100,4 +100,4 @@ These tips came up consistently across analyses:
 
 - 20,000+ autoplay games across `non-blocking` and `nply-3` strategies
 - Analysis scripts: `playground/winnability_signals.py`, `playground/king_face_down_analysis.py`
-- Detailed writeups: `docs/winnability-signals.md`, `docs/thousand-non-blocking-games.md`, `docs/thousand-nply-3-games.md`
+- Detailed writeups: `docs/analysis/winnability-signals.md`, `docs/analysis/thousand-non-blocking-games.md`, `docs/analysis/thousand-nply-3-games.md`
